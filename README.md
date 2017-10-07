@@ -1,6 +1,7 @@
 # Scrapland Reverse Engineering notes and tools
 
 ## Scripts:
+* `parse_save.py`: Dumps information extracted from Save file
 * `scrapper.py`: Extractor and Repacker for *.packed files, needs the `construct` python module and python 3.x
  - Run `scrapper.py -h` for help
 * `lib/dbg.py`: general Script for poking around  inside the game's scripting system
