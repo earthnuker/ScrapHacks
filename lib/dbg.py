@@ -121,6 +121,19 @@ def enable_all_conv():
     print(len(CharConversor.ConversionChars))
     print "Done!"
 
+def nuke():
+    E=Scrap.GetFirst()
+    me = Scrap.UsrEntity(0)
+    while E:
+        if E.Name==me.Name:
+            E = Scrap.GetEntity(E.NextInSlot)
+        try:
+            E.Life=0
+            E.Invulnerable=0
+        except:
+            pass
+        E = Scrap.GetEntity(E.NextInSlot)
+
 def become(name):
     enable_all_conv()
     import CharConversor
