@@ -23,14 +23,11 @@ PackedHeader = Struct(
                       Const(b'BFPK'),
                       Const(b'\0\0\0\0'),
                       'files'/PrefixedArray(Int32ul,ScrapFile),
-                      'offset'/Tell,
                     )
 DummyHeader = Struct(
                       Const(b'BFPK'),
                       Const(b'\0\0\0\0'),
-                      'files_cnt'/Rebuild(Int32ul,len_(this.files)),
                       'files'/PrefixedArray(Int32ul,DummyFile),
-                      'offset'/Tell,
                     )
 parser = argparse.ArgumentParser(description='Unpack and Repack .packed files')
 parser.add_argument('-u', '--unpack', action='store_true',
@@ -90,7 +87,7 @@ if options.unpack:
         print('Unpacking {}'.format(os.path.basename(packed_file)))
         with open(packed_file, 'rb') as pkfile:
             data = PackedHeader.parse_stream(pkfile)
-            print("Offset:",hex(data.offset))
+            print("Offset:",hex(pkfile.tell()))
             for file in tqdm(data.files,ascii=True):
                 folder, filename = os.path.split(file.path)
                 if folder:
