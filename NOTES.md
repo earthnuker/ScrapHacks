@@ -47,6 +47,7 @@
 # How to enable External Console:
 1. exctract `Data.packed`
 2. in m3d.ini uncomment "ConsolaWnd" (GUI Console) or "ConsolaTxt" (Text Console) and set the value to "SI"
+3. repack "Data.packed"
 
 # Other Interesting things
 - sys.path contains "./lib" so you can load your own Python Modules
