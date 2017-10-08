@@ -15,4 +15,4 @@
  - `dbg.helplib()` generates a file `helplib.txt` in the Game's folder containing all available Documentation for all available classes and functions
  - `dbg.settrace()` Logs all Python function calls together with their arguments into a `dbg.txt` file inside the Game's folder
 
-# [Notes](NOTES.md)
+## [Notes](NOTES.md)
