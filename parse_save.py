@@ -16,3 +16,5 @@ with open("Save0.sav", 'rb') as sav_file:
     print("Title:",save.title)
     for var in save.data:
         print(" - {}: {}".format(var.name,var.data))
+    #for block in save.data:
+    #    print("{}: {}".format(block.v_name, block.v_data))
