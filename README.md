@@ -1,4 +1,4 @@
-# Scrapland Reverse Engineering notes and tools
+# Scrapland Reverse Engineering noted and tools
 
 ## Scripts:
 * `parse_save.py`: Dumps information extracted from Save file
@@ -14,3 +14,5 @@
  - `dbg.become(name)` allows you to transform into any character
  - `dbg.helplib()` generates a file `helplib.txt` in the Game's folder containing all available Documentation for all available classes and functions
  - `dbg.settrace()` Logs all Python function calls together with their arguments into a `dbg.txt` file inside the Game's folder
+
+# [Notes](NOTES.md)
