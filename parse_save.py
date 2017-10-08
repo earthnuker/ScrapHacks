@@ -1,24 +1,20 @@
 from construct import *
 from pprint import pprint
-ScrapSaveStr = Struct(
-    'length'/Int32ul,
-    'data'/String(this.length,encoding='utf-8'),
-    )
 ScrapSaveVar = Struct(
-    'v_name_size'/Int32ul,
-    'v_name'/String(lambda ctx: ctx.v_name_size,encoding='utf-8'),
-    'v_data_size'/Int32ul,
-    'v_data'/String(lambda ctx: ctx.v_data_size,encoding='utf-8'),
+    'name'/PascalString(Int32ul,encoding='utf-8'),
+    'data'/PascalString(Int32ul,encoding='utf-8'),
 )
 ScrapSave = 'ScarpSaveGame'/Struct(
-                   'title'/ScrapSaveStr,
-                   'id'/ScrapSaveStr,
-                   'num_vars'/Int32ul,
-                   'data'/ScrapSaveVar[this.num_vars],
+                   'title'/PascalString(Int32ul,encoding='utf-8'),
+                   'id'/PascalString(Int32ul,encoding='utf-8'),
+                   'data'/PrefixedArray(Int32ul,ScrapSaveVar),
                    Terminated
                    )
 with open("Save0.sav", 'rb') as sav_file:
     save = ScrapSave.parse_stream(sav_file)
-    pprint(save)
+    print("ID:",save.id)
+    print("Title:",save.title)
+    for var in save.data:
+        print(" - {}: {}".format(var.name,var.data))
     #for block in save.data:
     #    print("{}: {}".format(block.v_name, block.v_data))
