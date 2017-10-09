@@ -1,6 +1,9 @@
 import sys
 import Scrap
 import quickconsole
+import MissionsFuncs
+QC=quickconsole
+MF=MissionsFuncs
 def p_s(*args):
     msg=""
     for obj in args:
@@ -120,6 +123,16 @@ def enable_all_conv():
         E = Scrap.GetEntity(E.NextInSlot)
     print(len(CharConversor.ConversionChars))
     print "Done!"
+
+def goto(name=None):
+    if name==None:
+        name=MF.currentTarget
+    Scrap.UsrEntity(0).Pos=Scrap.GetEntity(name).Pos
+
+def bring(name=None):
+    if name==None:
+        name=MF.currentTarget
+    Scrap.GetEntity(name).Pos=Scrap.UsrEntity(0).Pos
 
 def nuke():
     E=Scrap.GetFirst()
