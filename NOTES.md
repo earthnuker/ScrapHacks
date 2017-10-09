@@ -3,7 +3,7 @@
 - Ingame Scripting Language: Python 1.5.2
 
 # Ingame-Console (Ctrl+\^) (Handler@0x42190):
-* "<Command>"
+* "\<Command\>"
  - Try to evaluate Command as Python expression
 * ":\<Var>":
  - Get Game Engine Global Variable
