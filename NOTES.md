@@ -3,6 +3,8 @@
 - Ingame Scripting Language: Python 1.5.2
 
 # Ingame-Console (Ctrl+\^) (Handler@0x42190):
+* "<Command>"
+ - Try to evaluate Command as Python expression
 * ":\<Var>":
  - Get Game Engine Global Variable
 * ":\<Var> \<Val>"
@@ -29,6 +31,10 @@
 
 ## m3d.ini loader @0x05f7000
 
+## SM3-Model Loader @0x650f80 (?)
+
+## File Loader @ 0x6665a0 (??)
+
 ## *.packed File Format:
     Header:
         "BFPK\0\0\0\0"
@@ -42,12 +48,12 @@
 ## Interesting file:
 * m3d.ini: Rendering Engine Configuration
 * scripts/: Game Engine Scripts
-* scripts/: Game Engine Scripts
+
 
 # How to enable External Console:
 1. exctract `Data.packed`
 2. in m3d.ini uncomment "ConsolaWnd" (GUI Console) or "ConsolaTxt" (Text Console) and set the value to "SI"
 3. repack "Data.packed"
 
-# Other Interesting things
+# Misc. Interesting things
 - sys.path contains "./lib" so you can load your own Python Modules
