@@ -3,19 +3,19 @@
 - Ingame Scripting Language: Python 1.5.2
 
 # Ingame-Console (Ctrl+\^) (Handler@0x42190):
-* "\<Command\>"
+* "\<Command>"
  - Try to evaluate Command as Python expression
-* ":\<Var>":
+* ":\<Var>"
  - Get Game Engine Global Variable
 * ":\<Var> \<Val>"
  - Set Game Engine Global Variable
-* "?":
+* "?"
  - Show all Global Variable
-* "?\<String>":
+* "?\<String>"
  - Show all Global Variable matching <String>
-* "/\<command>":
+* "/\<command>"
  - Run Command defined in QuickConsole.py(c) 'import quickconsole;quickconsole.%s()'
-* "/\<command> \<arg>,\<arg>":
+* "/\<command> \<arg>,\<arg>"
  - Run function in QuickConsole.py(c) with argument(s) 'import quickconsole;quickconsole.%s(%s)'
 
 # External Console (Scenegraph Debugging?) (Handler@0x5f9520):
