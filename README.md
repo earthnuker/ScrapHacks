@@ -13,6 +13,11 @@
  - `dbg.enable_all_conv()` allows you to "overwrite" any character, even if they are protected/invulnerable
  - `dbg.become(name)` allows you to transform into any character
  - `dbg.helplib()` generates a file `helplib.txt` in the Game's folder containing all available Documentation for all available classes and functions
- - `dbg.settrace()` Logs all Python function calls together with their arguments into a `dbg.txt` file inside the Game's folder
+ - `dbg.settrace()` Logs all Python function calls together with their arguments into a 
+ - `dbg.txt` file inside the Game's folder
+
+## [ScrapHacks](ScrapHacks/README.md)
+
+WIP Memory hacking library
 
 ## [Notes](NOTES.md)
