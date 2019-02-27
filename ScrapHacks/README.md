@@ -1,12 +1,10 @@
+![Screenshot](img/Screenshot_1.png)
+
 ## Usage
 
-`.\Injector.exe dll .\ScrapHack.dll <PATH_TO_SCRAP.exe>`
-e.g:
-`.\Injector.exe dll .\ScrapHack.dll "D:\Games\Deep Silver\Scrapland\Bin\Scrap.exe"`
-
-or inject into a running instance of the game using your DLL-Injector of choise like so:
-
-`.\Injector.exe dll .\ScrapHack.dll <PID>`
+0. Build Project
+1. Run Injector `.\Injector.exe`
+2. Run Game
+3. Wait ~10 Seconds for game to load and Injector to works its magic
 
 
-Currently the Injected DLL creates a thread that waits for you to press F12 and then writes something to the ingame console

@@ -4,9 +4,14 @@ import quickconsole
 import MissionsFuncs
 import SScorer
 import Menu
+import sys
 QC = quickconsole
 MF = MissionsFuncs
 last_frame = None
+
+sys.path.append(".\\pylib\\Lib")
+sys.path.append(".\\pylib\\Libs")
+sys.path.append(".\\pylib")
 
 
 def reload():
@@ -15,9 +20,10 @@ def reload():
 
 
 def dgb_info():
-    txt =`last_frame`
-    SScorer.SetLabelText(txt, Scrap.GetTime()+0.1)
-    Scrap.AddScheduledFunc(Scrap.GetTime()+0.1, dgb_info, (), "dbg_info")
+    SScorer.SetLabelText(`last_frame`, Scrap.GetTime() + 0.1)
+    Scrap.DeleteScheduledFuncs("dbg.dbg_info")
+    Scrap.DeleteScheduledFuncs("dbg.dbg_info")
+    Scrap.AddScheduledFunc(Scrap.GetTime()+0.1, dgb_info, (), "dbg.dbg_info")
 
 
 def crazy():
@@ -117,14 +123,6 @@ def helpfunc(func):
     print "    "+func.__doc__
 
 
-for module in sys.builtin_module_names:
-    if module[0] == "S":
-        print "Loading "+module
-    exec("import " + module)
-
-sys.settrace(None)
-
-
 def trace(frame, event, arg):
     global last_frame
     if event != "call":
@@ -189,10 +187,10 @@ def helplib():
                 continue
             if hasattr(value, "__doc__"):
                 if value.__doc__:
-                    log("- "+name+":")
+                    log("- "+name+":"+repr(value))
                     log("      "+value.__doc__)
                 else:
-                    log("- "+name+": ???")
+                    log("- "+name+":"+repr(value))
             else:
                 log("- "+name+": "+repr(value))
         log("\n")
@@ -218,8 +216,6 @@ def enable_all_conv():
         E.Invulnerable = 0
         E.Life = 100
         E = Scrap.GetEntity(E.NextInSlot)
-    print(len(CharConversor.ConversionChars))
-    print "Done!"
 
 
 def goto(name=None):
@@ -249,8 +245,8 @@ def nuke():
 
 
 def become(name):
-    enable_all_conv()
     import CharConversor
+    enable_all_conv()
     me = Scrap.UsrEntity(0)
     ent = Scrap.GetEntity(name)
     if ent:
@@ -277,13 +273,8 @@ def movie(MovieName="Movie/Movie"):
     Scrap.AddScheduledFunc(NextTime, movie, (Speed, MovieName, NextTime))
 
 
-def park():
-    me = Scrap.UsrEntity(0)
-
-
 def find(filt="*"):
-    Scrap.StartDummySearch(filt, 1)
-    dummy = 1
+    dummy = Scrap.StartDummySearch(filt, 1)
     while dummy:
         dummy = Scrap.NextDummySearch()
         print dummy
@@ -300,12 +291,57 @@ def getall():
         E = Scrap.GetEntity(E.NextInSlot)
 
 
-def god():
-    e = Scrap.UsrEntity(0)
-    QC.godcall(None, (1, 1, 1, 1, 1, 1))
-    Scrap.AddScheduledFunc(Scrap.GetTime()+0.1, god, (), 'dbg.god')
+def god(e=None):
+    if e == None:
+        e = Scrap.UsrEntity(0)
+    if e:
+        if e.IsType("Car"):
+            e.Ammo00 = SWeap.GetFAmmo(0, "Max")
+            e.Ammo01 = SWeap.GetFAmmo(1, "Max")
+            e.Ammo02 = SWeap.GetFAmmo(2, "Max")
+            e.Ammo03 = SWeap.GetFAmmo(3, "Max")
+            e.WeapList = "63,63,63,63,63,63,1"
+            e.MaxLife = e.MinLife
+            if e.Life > e.MaxLife:
+                e.Life = e.MaxLife
+            e.CMStamp = 0
+            e.FireStamp = 0
+            e.BoostTime = 0
+        elif e.IsType("WalkChar"):
+            e.Energy = 1
+        e.Invulnerable = 1
+    Scrap.DeleteScheduledFuncs("dbg.god")
+    Scrap.DeleteScheduledFuncs("dbg.god")
+    Scrap.AddScheduledFunc(Scrap.GetTime(), god, (e,), "dbg.god")
 
 
+def ultranuke():
+    nuke()
+    Scrap.DeleteScheduledFuncs("dbg.ultranuke")
+    Scrap.DeleteScheduledFuncs("dbg.ultranuke")
+    Scrap.AddScheduledFunc(Scrap.GetTime(), ultranuke,
+                           (), "dbg.ultranuke")
+
+
+def brake():
+    if me:
+        me.Vel = (0, 0, 0)
+
+
+for _ in range(1024):
+    Scrap.DeleteScheduledFuncs("dbg.dbg_info")
+    Scrap.DeleteScheduledFuncs("dbg.god")
+    Scrap.DeleteScheduledFuncs("dbg_info")
+
+
+for module in sys.builtin_module_names:
+    if module[0] == "S":
+        print "Loading "+module
+    exec("import " + module)
+
+sys.settrace(None)
+
+me = Scrap.UsrEntity(0)
 notrace()
 helplib()
 # settrace()
@@ -314,5 +350,8 @@ enable_all_conv()
 god()
 Scrap.Set("debug", 3)
 Scrap.Set("ShowConsoleLog", 1)
+Scrap.Set("AlwaysFlushLog", 1)
+Scrap.Set("PythonExecute", "import dbg")
+exec("import QuickConsole;QuickConsole.debug=sys.modules['dbg']")
 
 print "Debug Module loaded"
