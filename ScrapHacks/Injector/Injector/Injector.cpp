@@ -230,13 +230,8 @@ int main(int argc, char *argv[])
 	{
 		Sleep(100);
 		GetWindowThreadProcessId(FindWindowA("ScrapClass", NULL), &PID);
-		if (PID)
-		{
-			cout << "[+] Found PID: " << PID << endl;
-			cout << "[*] Sleeping 10 seconds to wait for it to fully load" << endl;
-			Sleep(10000);
-		}
 	}
+	cout << "[+] Found PID: " << PID << endl;
 	InjectDll(PID);
 	cout << "[*] Done!" << endl;
 	return 0;
