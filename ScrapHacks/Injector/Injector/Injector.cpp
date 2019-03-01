@@ -169,7 +169,6 @@ void InjectDll(DWORD PID, bool do_resume = false)
 	cout << "[*] Injecting DLL " << dll_name << " into PID " << PID << endl;
 	cout << "[*] Opening Process Handle" << endl;
 	hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, PID);
-	PID = GetProcessId(hProc);
 	GetFullPathNameA(dll_name, MAX_PATH, dll_full_path, 0);
 	cout << "[*] Adjusting Privileges of Process" << endl;
 	adjustPrivs(hProc);
@@ -216,23 +215,53 @@ void InjectDll(DWORD PID, bool do_resume = false)
 	CloseHandle(hProc);
 	return;
 }
+
+vector<HANDLE> spawn(char* binary) {
+	STARTUPINFO startupinfo;
+	PROCESS_INFORMATION processinfo;
+	ZeroMemory(&startupinfo, sizeof(startupinfo));
+	ZeroMemory(&processinfo, sizeof(processinfo));
+	startupinfo.cb = sizeof(startupinfo);
+	if (!CreateProcessA(NULL, binary, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupinfo, &processinfo)) {
+		return {};
+	}
+	return { processinfo.hProcess,processinfo.hThread };
+}
+
 int main(int argc, char *argv[])
 {
 	string prog;
 	HANDLE hProc = INVALID_HANDLE_VALUE;
+	HANDLE hThread = INVALID_HANDLE_VALUE;
 	DWORD PID = 0;
-	GetWindowThreadProcessId(FindWindowA("ScrapClass", NULL), &PID);
-	if (PID == 0)
-	{
-		cout << "[*] Waiting for Scrapland to Launch..." << endl;
-	}
-	while (PID == 0)
-	{
-		Sleep(100);
+	if ((argc>1)&&fexists(argv[1])) {
+		cout << "[*] Spawning process for \"" << argv[1] << "\"" << endl;
+		vector<HANDLE> handles = spawn(argv[1]);
+		if (handles.empty()) {
+			cout << "[!] Error: " << GetLastErrorAsString() << endl;
+			return -1;
+		}
+		hProc = handles[0];
+		hThread = handles[1];
+		PID = GetProcessId(hProc);
+		cout << "[+] Got PID: " << PID << endl;
+	} else {
 		GetWindowThreadProcessId(FindWindowA("ScrapClass", NULL), &PID);
+		if (PID == 0)
+		{
+			cout << "[*] Waiting for Scrapland to Launch..." << endl;
+		}
+		while (PID == 0)
+		{
+			Sleep(100);
+			GetWindowThreadProcessId(FindWindowA("ScrapClass", NULL), &PID);
+		}
+		cout << "[+] Found PID: " << PID << endl;
 	}
-	cout << "[+] Found PID: " << PID << endl;
 	InjectDll(PID);
+	if (hThread != INVALID_HANDLE_VALUE) {
+		while (ResumeThread(hThread));
+	}
 	cout << "[*] Done!" << endl;
 	return 0;
 }

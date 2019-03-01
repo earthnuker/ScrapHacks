@@ -1,7 +1,17 @@
 #pragma once
-#define P_WORLD 0x7FE944
-#define P_PY_MODS 0x79C698
+//OFFSETS
 #define O_MONEY 0x2090
 
-auto scrap_log = (int(_cdecl*)(int, const char*))0x4134C0;
-auto scrap_exec = (void(_cdecl*)(const char*))0x5a8390;
+//POINTERS
+#define P_WORLD 0x7FE944
+#define P_PY_MODS 0x79C698
+#define P_CON_HANDLER 0x402190
+#define P_SCRAP_LOG 0x4134C0
+#define P_SCRAP_EXEC 0x5a8390
+
+//FUNCTION TYPES
+#define T_SCRAP_LOG int(_cdecl*)(unsigned int, const char*)
+#define T_SCRAP_EXEC int(_cdecl*)(const char*)
+
+auto scrap_log = (T_SCRAP_LOG)P_SCRAP_LOG;
+auto scrap_exec = (T_SCRAP_EXEC)P_SCRAP_EXEC;

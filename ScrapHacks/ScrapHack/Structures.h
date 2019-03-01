@@ -30,5 +30,5 @@ struct PyMod
 struct Module
 {
 	PyMod *mod;
-	map<string, PyMethodDef> methods;
+	map<string, PyMethodDef*> methods;
 };

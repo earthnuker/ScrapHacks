@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #define DLL_EXPORT extern "C" __declspec(dllexport)
 void DllInit(HMODULE);
+void DllPreInit(HMODULE);
 
 BOOL APIENTRY DllMain(HMODULE hModule,
                       DWORD ul_reason_for_call,
@@ -11,6 +12,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     {
     case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hModule);
+		DllPreInit(hModule);
         hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)DllInit, hModule, 0, 0);
         break;
     case DLL_PROCESS_DETACH:

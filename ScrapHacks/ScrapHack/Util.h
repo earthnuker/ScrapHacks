@@ -124,7 +124,6 @@ void hexdump(void *addr, size_t count)
 	cout << endl;
 }
 
-
 template<typename T>
 T* __ptr(uintptr_t addr)
 {

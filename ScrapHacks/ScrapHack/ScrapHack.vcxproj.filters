@@ -33,6 +33,9 @@
     <ClInclude Include="Py_Utils.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="Hook.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -13,7 +13,7 @@ PyMethodDef *find_method_table(uintptr_t base, uintptr_t needle)
 			return reinterpret_cast<PyMethodDef*>(mod_addr);
 		}
 	}
-	return reinterpret_cast<PyMethodDef *>(0);
+	return reinterpret_cast<PyMethodDef*>(0);
 }
 
 map<string, Module> get_modules(uintptr_t base)
@@ -27,7 +27,7 @@ map<string, Module> get_modules(uintptr_t base)
 		PyMethodDef *method_table = find_method_table((size_t)modules[i].init_func, reinterpret_cast<uintptr_t>(modules[i].name));
 		for (size_t j = 0; method_table != NULL && method_table[j].ml_name != NULL; j++)
 		{
-			mod.methods[method_table[j].ml_name] = method_table[j];
+			mod.methods[method_table[j].ml_name] = &method_table[j];
 		}
 		Py[mod.mod->name] = mod;
 	}
@@ -38,7 +38,7 @@ void *get_py(const char *mod, const char *meth)
 {
 	try
 	{
-		return Py.at(mod).methods.at(meth).ml_meth;
+		return Py.at(mod).methods.at(meth)->ml_meth;
 	}
 	catch (out_of_range)
 	{
@@ -51,7 +51,7 @@ void inject(const char *mod, const char *meth, void *detour)
 	try
 	{
 		void *orig = get_py(mod, meth);
-		Py.at(mod).methods.at(meth).ml_meth = detour;
+		Py.at(mod).methods.at(meth)->ml_meth = detour;
 		cout << mod << "." << meth << ": " << orig << " -> " << detour << endl;
 	}
 	catch (out_of_range)

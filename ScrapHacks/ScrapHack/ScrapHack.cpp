@@ -1,3 +1,4 @@
+#define WIN32_LEAN_AND_MEAN
 #include "stdafx.h"
 #include <string>
 #include <sstream>
@@ -5,23 +6,25 @@
 #include <map>
 #include <iomanip>
 #include <iostream>
+#include <typeinfo>
+#include <functional>
 #include <Windows.h>
 #include <TlHelp32.h>
-//#include <D3d8.h>
-
 using namespace std;
 
 #include "Scrapland.h"
 #include "Util.h"
 #include "Structures.h"
 #include "Py_Utils.h"
+#include "Hook.h"
+
+#define SIZE 6
 
 HMODULE hD3D8Dll = 0;
 
 bool initialized = false;
 bool running = true;
 HMODULE mod = 0;
-
 
 void MainLoop(HMODULE mod)
 {
@@ -67,7 +70,7 @@ void MainLoop(HMODULE mod)
 			{
 				for (auto meth : mod.second.methods)
 				{
-					cout << mod.first << "." << meth.first << " @ " << meth.second.ml_meth << endl;
+					cout << mod.first << "." << meth.first << " @ " << meth.second->ml_meth << endl;
 				}
 			}
 		}
@@ -77,9 +80,11 @@ void MainLoop(HMODULE mod)
 		}
 	}
 	SetConsoleCtrlHandler(NULL, false);
+	hooks.clear();
+	scrap_log(0xff0000, "ScrapHacks unloaded!\n");
 	cout << "[+] ScrapHacks unloaded, you can now close the console!" << endl;
-	;
 	FreeConsole();
+	PostQuitMessage(0);
 	FreeLibraryAndExitThread(mod, 0);
 }
 
@@ -90,21 +95,53 @@ void InitConsole()
 	SetupConsole(me);
 }
 
+void handle_command(const char* cmd) {
+	cout << "CMD: " << cmd << endl;
+	scrap_log(0x00ff00, "HAXX: ");
+	scrap_log(0x00ff00,cmd);
+	scrap_log(0x00ff00,"\n");
+	return;
+}
+
+int my_console(const char* cmd) {
+	typedef int(_cdecl *t_func)(const char*);
+	shared_ptr<Hook> hook = hooks[P_CON_HANDLER];
+	t_func func= reinterpret_cast<t_func>(hook->func());
+	if (cmd[0] == '$') {
+		handle_command(++cmd);
+		return 0;
+	}
+	hook->disable();
+	int ret=func(cmd);
+	hook->enable();
+	return ret;
+}
+
+void hook_console() {
+	new Hook(reinterpret_cast<void*>(P_CON_HANDLER) , my_console);
+}
+
+
+void DllPreInit(HMODULE _mod) {
+	char mfn[1024];
+	InitConsole();
+	GetModuleFileName(0, mfn, 1024);
+	Py = get_modules(P_PY_MODS);
+	hD3D8Dll = GetModuleHandle("d3d8.dll");
+	cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << endl;
+	cout << "[*] D3D8 DLL @0x" << hD3D8Dll << endl;
+	hook_console();
+}
+
 void DllInit(HMODULE _mod)
 {
 	initialized = true;
 	mod = _mod;
-	char mfn[1024];
-	InitConsole();
-	GetModuleFileName(0, mfn, 1024);
-	cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << endl;
 	Sleep(3000);
-	Py = get_modules(P_PY_MODS);
+	cout << "[*] World: " << ptr<void>(P_WORLD, 0) << endl;
 	cout << "[*] Importing python dbg module" << endl;
 	scrap_exec("import dbg");
-	cout << "[*] World: " << ptr<void>(P_WORLD,0) << endl;
-	hD3D8Dll = GetModuleHandle("d3d8.dll");
-	cout << "[*] D3D8 DLL @0x"<< hD3D8Dll << endl;
+	scrap_log(0xff0000, "ScrapHacks loaded!\n");
 	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)MainLoop, mod, 0, 0);
 	cout << "[*] Starting message pump" << endl;
 	MSG msg;

@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Hook.h" />
     <ClInclude Include="Py_Utils.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="Scrapland.h" />
