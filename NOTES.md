@@ -58,6 +58,7 @@ Header:
 1. exctract `Data.packed`
 2. in m3d.ini uncomment (remove `;`) "ConsolaWnd" (GUI Console) or "ConsolaTxt" (Text Console) and set the value to "SI"
 3. repack "Data.packed"
+or right click on the title bar (in windowed mode) and click "Switch Console"
 or Use a custom Content Pack (**untested!**)
 
 # Misc. Interesting things
