@@ -2,18 +2,19 @@
 #include <functional>
 class Hook;
 
-map<uintptr_t, shared_ptr<Hook>> hooks;
-
-class Hook {
+class Hook
+{
 private:
 	DWORD protect;
 	void* orig;
 	void* detour;
+	bool enabled;
 	uint8_t orig_bytes[6];
 	uint8_t jmp_bytes[6];
+	static map<uintptr_t, shared_ptr<Hook>> hooks;
+
 public:
 	Hook(void* func, void* detour) {
-		cout << "Hooking: " << func << " -> " << detour << endl;
 		uintptr_t dest = reinterpret_cast<uintptr_t>(detour);
 		uintptr_t src = reinterpret_cast<uintptr_t>(func);
 		this->orig = func;
@@ -26,25 +27,77 @@ public:
 		this->jmp_bytes[5] = 0xC3; // ret
 		VirtualProtect(func, 16, PAGE_EXECUTE_READWRITE, &(this->protect));
 		memcpy(this->orig_bytes, this->orig, 1 + 4 + 1);
-		memcpy(this->orig, this->jmp_bytes, 1 + 4 + 1);
-		hooks[src]=shared_ptr<Hook>(this);
-	}
-	
-	~Hook() {
-		cout << "Unhooking: " << this->detour << " -> " << this->orig << endl;
-		uintptr_t src = reinterpret_cast<uintptr_t>(this->orig);
-		memcpy(this->orig, this->orig_bytes, 1 + 4 + 1);
+		VirtualProtect(func, 16, this->protect, NULL);
+		this->enabled = false;
 	}
 
+	~Hook() {
+		this->disable();
+	}
+
+	static void addr(void* addr, void* detour) {
+		cout << "Hooking: [" << addr << " -> " << detour <<"]" << endl;
+		uintptr_t key = reinterpret_cast<uintptr_t>(detour);
+		hooks[key] = make_shared<Hook>(addr,detour);
+		hooks[key]->enable();
+	}
+
+	static void module(const char* mod, const char* func, void* detour) {
+		cout << "Hooking: [" << mod<<"]."<<func << " -> " << detour << endl;
+		void* addr = GetProcAddress(GetModuleHandle(mod), func);
+		if (addr != NULL) {
+			Hook::addr(addr, detour);
+		}
+		else {
+			cerr << "[" << mod << "]." << func << " not found!" << endl;
+		};
+	}
+
+	static shared_ptr<Hook> get(void* func) {
+		uintptr_t addr = reinterpret_cast<uintptr_t>(func);
+		return Hook::get(addr);
+	}
+	
+	static shared_ptr<Hook> get(uintptr_t addr) {
+		return hooks.at(addr);
+	}
+
+	static size_t drop(void* func) {
+		uintptr_t addr = reinterpret_cast<uintptr_t>(func);
+		return Hook::drop(addr);
+	}
+
+	static size_t drop(uintptr_t addr) {
+		return hooks.erase(addr);
+	}
+
+	static void clear() {
+		return hooks.clear();
+	}
+
+
 	void disable() {
-		memcpy(this->orig, this->orig_bytes, 1 + 4 + 1);
+		if (enabled) {
+			//cout << "Disabling: [" << this->orig << " <- " << this->detour << "]" << endl;
+			VirtualProtect(this->orig, 16, PAGE_EXECUTE_READWRITE, NULL);
+			memcpy(this->orig, this->orig_bytes, 1 + 4 + 1);
+			VirtualProtect(this->orig, 16, this->protect, NULL);
+			enabled = false;
+		}
 	}
 	void enable() {
-		memcpy(this->orig, this->jmp_bytes, 1 + 4 + 1);
+		if (!enabled) {
+			//cout << "Enabling: [" << this->orig << " -> " << this->detour << "]" << endl;
+			VirtualProtect(this->orig, 16, PAGE_EXECUTE_READWRITE, NULL);
+			memcpy(this->orig, this->jmp_bytes, 1 + 4 + 1);
+			VirtualProtect(this->orig, 16, this->protect, NULL);
+			enabled = true;
+		}
 	}
 	
 	void* func() {
 		return this->orig;
 	}
-
 };
+
+map<uintptr_t, shared_ptr<Hook>> Hook::hooks;

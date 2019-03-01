@@ -1,6 +1,8 @@
 #pragma once
 //OFFSETS
 #define O_MONEY 0x2090
+#define O_ALARM 0x1C6C
+#define O_ALARM_GROW 0x1C68
 
 //POINTERS
 #define P_WORLD 0x7FE944

@@ -10,6 +10,11 @@
 #include <functional>
 #include <Windows.h>
 #include <TlHelp32.h>
+
+#pragma comment(lib, "d3d8.lib")
+#pragma comment(lib, "d3dx8.lib")
+#pragma comment(lib, "legacy_stdio_definitions.lib")
+
 using namespace std;
 
 #include "Scrapland.h"
@@ -17,8 +22,7 @@ using namespace std;
 #include "Structures.h"
 #include "Py_Utils.h"
 #include "Hook.h"
-
-#define SIZE 6
+#include "D3D8_Hook.h"
 
 HMODULE hD3D8Dll = 0;
 
@@ -32,6 +36,7 @@ void MainLoop(HMODULE mod)
 	cout << "[*] Starting main Loop" << endl;
 	cout << endl;
 	cout << "[F3 ] Unload ScrapHacks" << endl;
+	cout << "[F6 ] Show Alarm status" << endl;
 	cout << "[F7 ] Set Money to 0x7fffffff" << endl;
 	cout << "[F8 ] Dump python modules" << endl;
 	cout << "[F10] Enable python tracing" << endl;
@@ -50,17 +55,13 @@ void MainLoop(HMODULE mod)
 		}
 		if (key_down_norepeat(VK_F6))
 		{
-			/*
-			int32_t* alarm = reinterpret_cast<int32_t*>(ptr(WORLD, { 0x1C6C }));
-			int16_t* alarm = reinterpret_cast<int16_t*>(ptr(WORLD, { 0x1C6C }));
-			*/
+			
+			float* alarm = ptr<float>(P_WORLD, O_ALARM);
+			float* alarm_grow = ptr<float>(P_WORLD, O_ALARM_GROW);
+			cout << "Alarm: " << alarm[0] << " + " << alarm_grow[0] << endl;
 		}
 		if (key_down_norepeat(VK_F7))
 		{
-			/*==========================
-			mov     ecx, [7FE944h]
-			mov     edx, [ecx + 2090h]
-			==========================*/
 			int32_t *money = ptr<int32_t>(P_WORLD,O_MONEY);
 			*money = 0x7fffffff;
 		}
@@ -80,7 +81,7 @@ void MainLoop(HMODULE mod)
 		}
 	}
 	SetConsoleCtrlHandler(NULL, false);
-	hooks.clear();
+	Hook::clear();
 	scrap_log(0xff0000, "ScrapHacks unloaded!\n");
 	cout << "[+] ScrapHacks unloaded, you can now close the console!" << endl;
 	FreeConsole();
@@ -103,9 +104,9 @@ void handle_command(const char* cmd) {
 	return;
 }
 
-int my_console(const char* cmd) {
+int hooked_console(const char* cmd) {
 	typedef int(_cdecl *t_func)(const char*);
-	shared_ptr<Hook> hook = hooks[P_CON_HANDLER];
+	shared_ptr<Hook> hook = Hook::get(hooked_console);
 	t_func func= reinterpret_cast<t_func>(hook->func());
 	if (cmd[0] == '$') {
 		handle_command(++cmd);
@@ -118,7 +119,7 @@ int my_console(const char* cmd) {
 }
 
 void hook_console() {
-	new Hook(reinterpret_cast<void*>(P_CON_HANDLER) , my_console);
+	Hook::addr(reinterpret_cast<void*>(P_CON_HANDLER) , hooked_console);
 }
 
 
@@ -127,10 +128,9 @@ void DllPreInit(HMODULE _mod) {
 	InitConsole();
 	GetModuleFileName(0, mfn, 1024);
 	Py = get_modules(P_PY_MODS);
-	hD3D8Dll = GetModuleHandle("d3d8.dll");
 	cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << endl;
-	cout << "[*] D3D8 DLL @0x" << hD3D8Dll << endl;
 	hook_console();
+	hook_d3d8();
 }
 
 void DllInit(HMODULE _mod)
