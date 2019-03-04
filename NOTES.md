@@ -65,7 +65,7 @@ Points to GameState struct
 
 ## Entity Hash Table
 
-Hashfunction used: [strhash](http://www.cs.ecu.edu/karl/3300/spr16/Notes/DataStructure/hashtable.html)
+Hashfunction used: [PJW](https://en.wikipedia.org/wiki/PJW_hash_function) (Same parameters as the example implementation)
 
 Entry format:
 
@@ -81,6 +81,7 @@ Data format:
 | ------ | ----------- | -------------------- |
 | 0x0    | void**      | Virtual Method Table |
 | 0x4    | const char* | name as string       |
+| 0x14   | void*       | pointer to self      |
 | 0x28   | float[3]    | Position             |
 
 # File Formats

@@ -39,6 +39,9 @@
     <ClInclude Include="D3D8_Hook.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="VMT_Hook.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

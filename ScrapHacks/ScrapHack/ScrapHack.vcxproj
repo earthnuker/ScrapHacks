@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="D3D8_Hook.h" />
+    <ClInclude Include="VMT_Hook.h" />
     <ClInclude Include="Hook.h" />
     <ClInclude Include="Py_Utils.h" />
     <ClInclude Include="Structures.h" />

@@ -22,6 +22,7 @@ using namespace std;
 #include "Structures.h"
 #include "Py_Utils.h"
 #include "Hook.h"
+#include "VMT_Hook.h"
 #include "D3D8_Hook.h"
 
 HMODULE hD3D8Dll = 0;
@@ -30,28 +31,57 @@ bool initialized = false;
 bool running = true;
 HMODULE mod = 0;
 
+void dump_ht(HashTable* ht) {
+	size_t cnt = 0;
+	for (size_t i = 0; i < ht->size; ++i) {
+		HashTableEntry* ent = ht->chains[i];
+		if (ent != NULL) {
+			cout << i << ": ";
+			while (ent != NULL) {
+				++cnt;
+				cout << ent->name;
+				if (ent->next) {
+					cout << " -> ";
+				};
+				ent = ent->next;
+			}
+			cout << endl;
+		}
+	}
+	cout << cnt << " Entities" << endl;
+	return;
+}
+
 void MainLoop(HMODULE mod)
 {
 	Sleep(100);
 	cout << "[*] Starting main Loop" << endl;
 	cout << endl;
 	cout << "[F3 ] Unload ScrapHacks" << endl;
+	cout << "[F5 ] Show Overlay" << endl;
 	cout << "[F6 ] Show Alarm status" << endl;
 	cout << "[F7 ] Set Money to 0x7fffffff" << endl;
 	cout << "[F8 ] Dump python modules" << endl;
+	cout << "[F9 ] Dump Entity hashtable" << endl;
 	cout << "[F10] Enable python tracing" << endl;
 	cout << "[ F ] \"Handbrake\" (*Will* crash the game after some time!)" << endl;
 
 	while (running)
 	{
 		Sleep(100);
-		if (key_down_norepeat(VK_F10))
-		{
-			scrap_exec("dbg.settrace()");
-		}
+
 		while (key_down('F'))
 		{
 			scrap_exec("dbg.brake()");
+		}
+		if (key_down_norepeat(VK_F3))
+		{
+			break;
+		}
+
+		if (key_down_norepeat(VK_F5))
+		{
+			overlay = !overlay;
 		}
 		if (key_down_norepeat(VK_F6))
 		{
@@ -75,17 +105,16 @@ void MainLoop(HMODULE mod)
 				}
 			}
 		}
-		if (key_down_norepeat(VK_F3))
+
+		if (key_down_norepeat(VK_F9)) {
+			HashTable *ht = ptr<HashTable>(P_WORLD,O_HASHTABLE);
+			dump_ht(ht);
+		}
+		if (key_down_norepeat(VK_F10))
 		{
-			break;
+			scrap_exec("dbg.settrace()");
 		}
 	}
-	SetConsoleCtrlHandler(NULL, false);
-	Hook::clear();
-	scrap_log(0xff0000, "ScrapHacks unloaded!\n");
-	cout << "[+] ScrapHacks unloaded, you can now close the console!" << endl;
-	FreeConsole();
-	PostQuitMessage(0);
 	FreeLibraryAndExitThread(mod, 0);
 }
 
@@ -107,13 +136,12 @@ void handle_command(const char* cmd) {
 int hooked_console(const char* cmd) {
 	typedef int(_cdecl *t_func)(const char*);
 	shared_ptr<Hook> hook = Hook::get(hooked_console);
-	t_func func= reinterpret_cast<t_func>(hook->func());
 	if (cmd[0] == '$') {
 		handle_command(++cmd);
 		return 0;
 	}
 	hook->disable();
-	int ret=func(cmd);
+	int ret= hook->func<t_func>()(cmd);
 	hook->enable();
 	return ret;
 }
@@ -121,7 +149,6 @@ int hooked_console(const char* cmd) {
 void hook_console() {
 	Hook::addr(reinterpret_cast<void*>(P_CON_HANDLER) , hooked_console);
 }
-
 
 void DllPreInit(HMODULE _mod) {
 	char mfn[1024];
@@ -150,5 +177,15 @@ void DllInit(HMODULE _mod)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+	return;
+}
+
+void DllUnload(HMODULE _mod) {
+	SetConsoleCtrlHandler(NULL, false);
+	Hook::clear();
+	scrap_log(0xff0000, "ScrapHacks unloaded!\n");
+	cout << "[+] ScrapHacks unloaded, you can now close the console!" << endl;
+	FreeConsole();
+	PostQuitMessage(0);
 	return;
 }

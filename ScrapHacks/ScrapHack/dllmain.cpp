@@ -2,6 +2,8 @@
 #define DLL_EXPORT extern "C" __declspec(dllexport)
 void DllInit(HMODULE);
 void DllPreInit(HMODULE);
+void DllUnload(HMODULE);
+
 
 BOOL APIENTRY DllMain(HMODULE hModule,
                       DWORD ul_reason_for_call,
@@ -16,6 +18,8 @@ BOOL APIENTRY DllMain(HMODULE hModule,
         hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)DllInit, hModule, 0, 0);
         break;
     case DLL_PROCESS_DETACH:
+		DllUnload(hModule);
+		break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
         break;

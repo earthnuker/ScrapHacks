@@ -1,5 +1,5 @@
 #pragma once
-
+struct HashTableEntry;
 struct Vector3 {
 	float x;
 	float y;
@@ -31,4 +31,20 @@ struct Module
 {
 	PyMod *mod;
 	map<string, PyMethodDef*> methods;
+};
+
+struct Entity {
+	void* VMT;
+
+};
+
+struct HashTable {
+	uint32_t size;
+	HashTableEntry** chains;
+};
+
+struct HashTableEntry {
+	Entity* data;
+	const char* name;
+	HashTableEntry* next;
 };

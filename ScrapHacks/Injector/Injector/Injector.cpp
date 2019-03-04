@@ -156,7 +156,7 @@ bool Injected(DWORD PID)
 	return HasModule(PID, DLL_NAME);
 }
 
-void InjectDll(DWORD PID, bool do_resume = false)
+void InjectDll(DWORD PID)
 {
 	HANDLE hRemThread, hProc;
 	const char *dll_name = DLL_NAME;
@@ -175,42 +175,34 @@ void InjectDll(DWORD PID, bool do_resume = false)
 	if (HasModule(PID, dll_name))
 	{
 		cout << "[*] DLL already Loaded" << endl;
-	}
-	else
+		CloseHandle(hProc);
+		return;
+	};
+	if (!fexists(dll_full_path))
 	{
-		if (!fexists(dll_full_path))
-		{
-			cout << "[!] DLL file not found!" << endl;
-			return;
-		}
-		HINSTANCE hK32 = LoadLibraryA("kernel32");
-		cout << "[*] Getting Address of LoadLibrary" << endl;
-		LPVOID LoadLibrary_Address = (LPVOID)GetProcAddress(hK32, "LoadLibraryA");
-		FreeLibrary(hK32);
-		cout << "[+] LoadLibrary is at " << LoadLibrary_Address << endl;
-		cout << "[*] Allocating " << strlen(dll_full_path) << " Bytes of Memory" << endl;
-		LPVOID mem = VirtualAllocEx(hProc, NULL, strlen(dll_full_path), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-		if (mem == NULL)
-		{
-			cout << "[!] Could not Allocate Memory: " << GetLastErrorAsString() << endl;
-			return;
-		}
-		cout << "[*] Writing DLL Name to Process Memory at " << mem << endl;
-		WriteProcessMemory(hProc, mem, dll_full_path, strlen(dll_full_path), 0);
-		cout << "[*] Creating Thread to Load DLL" << endl;
-		if (do_resume)
-		{
-			hRemThread = CreateRemoteThread(hProc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary_Address, mem, CREATE_SUSPENDED, 0);
-			ResumeThread(hRemThread);
-		}
-		else
-		{
-			hRemThread = CreateRemoteThread(hProc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary_Address, mem, 0, 0);
-		}
-		cout << "[*] Waiting for DLL to load" << endl;
-		WaitForSingleObject(hRemThread, INFINITE);
-		CloseHandle(hRemThread);
+		cout << "[!] DLL file not found!" << endl;
+		CloseHandle(hProc);
+		return;
 	}
+	HINSTANCE hK32 = LoadLibraryA("kernel32");
+	cout << "[*] Getting Address of LoadLibrary" << endl;
+	LPVOID LoadLibrary_Address = (LPVOID)GetProcAddress(hK32, "LoadLibraryA");
+	FreeLibrary(hK32);
+	cout << "[+] LoadLibrary is at " << LoadLibrary_Address << endl;
+	cout << "[*] Allocating " << strlen(dll_full_path) << " Bytes of Memory" << endl;
+	LPVOID mem = VirtualAllocEx(hProc, NULL, strlen(dll_full_path), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	if (mem == NULL)
+	{
+		cout << "[!] Could not Allocate Memory: " << GetLastErrorAsString() << endl;
+		return;
+	}
+	cout << "[*] Writing DLL Name to Process Memory at " << mem << endl;
+	WriteProcessMemory(hProc, mem, dll_full_path, strlen(dll_full_path), 0);
+	cout << "[*] Creating Thread to Load DLL" << endl;
+	hRemThread = CreateRemoteThread(hProc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary_Address, mem, 0, 0);
+	cout << "[*] Waiting for DLL to load" << endl;
+	WaitForSingleObject(hRemThread, INFINITE);
+	CloseHandle(hRemThread);
 	cout << "[*] Closing Process Handle" << endl;
 	CloseHandle(hProc);
 	return;

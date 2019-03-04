@@ -1,19 +1,18 @@
 #pragma once
 #include <functional>
-class Hook;
-
 class Hook
 {
 private:
-	DWORD protect;
+	MEMORY_BASIC_INFORMATION mbi;
 	void* orig;
 	void* detour;
 	bool enabled;
 	uint8_t orig_bytes[6];
 	uint8_t jmp_bytes[6];
 	static map<uintptr_t, shared_ptr<Hook>> hooks;
-
+	
 public:
+
 	Hook(void* func, void* detour) {
 		uintptr_t dest = reinterpret_cast<uintptr_t>(detour);
 		uintptr_t src = reinterpret_cast<uintptr_t>(func);
@@ -25,16 +24,18 @@ public:
 		this->jmp_bytes[3] = (dest >> 16) & 0xff;
 		this->jmp_bytes[4] = (dest >> 24) & 0xff;
 		this->jmp_bytes[5] = 0xC3; // ret
-		VirtualProtect(func, 16, PAGE_EXECUTE_READWRITE, &(this->protect));
+		VirtualQuery(func, &mbi, sizeof(mbi));
+		VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE, &mbi.Protect);
 		memcpy(this->orig_bytes, this->orig, 1 + 4 + 1);
-		VirtualProtect(func, 16, this->protect, NULL);
+		VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
 		this->enabled = false;
 	}
 
 	~Hook() {
+		cout << "Unhooking: [" << this->orig << " <- " << this->detour << "]" << endl;
 		this->disable();
 	}
-
+	
 	static void addr(void* addr, void* detour) {
 		cout << "Hooking: [" << addr << " -> " << detour <<"]" << endl;
 		uintptr_t key = reinterpret_cast<uintptr_t>(detour);
@@ -72,31 +73,35 @@ public:
 	}
 
 	static void clear() {
+		cout << "Clearing Hooks" << endl;
+		for (pair<uintptr_t,shared_ptr<Hook>> h : hooks) {
+			h.second->disable();
+		}
 		return hooks.clear();
 	}
-
 
 	void disable() {
 		if (enabled) {
 			//cout << "Disabling: [" << this->orig << " <- " << this->detour << "]" << endl;
-			VirtualProtect(this->orig, 16, PAGE_EXECUTE_READWRITE, NULL);
+			VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE, NULL);
 			memcpy(this->orig, this->orig_bytes, 1 + 4 + 1);
-			VirtualProtect(this->orig, 16, this->protect, NULL);
+			VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
 			enabled = false;
 		}
 	}
 	void enable() {
 		if (!enabled) {
 			//cout << "Enabling: [" << this->orig << " -> " << this->detour << "]" << endl;
-			VirtualProtect(this->orig, 16, PAGE_EXECUTE_READWRITE, NULL);
+			VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE, NULL);
 			memcpy(this->orig, this->jmp_bytes, 1 + 4 + 1);
-			VirtualProtect(this->orig, 16, this->protect, NULL);
+			VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
 			enabled = true;
 		}
 	}
-	
-	void* func() {
-		return this->orig;
+
+	template<typename T>
+	T func() {
+		return reinterpret_cast<T>(this->orig);
 	}
 };
 
