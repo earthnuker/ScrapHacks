@@ -179,14 +179,12 @@ void H_Exit(){
 	typedef void(_cdecl *t_func)(void);
 	shared_ptr<Hook> hook = Hook::get(H_Exit);
 	DllUnload(mod);
-	hook->disable();
 	HWND hMainWindow = ptr<HWND>(0x7FA830, 0x7c)[0];
 	SendMessage(hMainWindow, WM_CLOSE, 0, 0);
 	return;
 }
 
 void hook_exit() {
-	//void* p_exit = ptr<void*>(0x7fa830,0x0, 0x20);
 	Hook::addr(reinterpret_cast<void*>(0x4010c0), H_Exit);
 }
 
