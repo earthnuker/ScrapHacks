@@ -226,6 +226,10 @@ int main(int argc, char *argv[])
 	HANDLE hProc = INVALID_HANDLE_VALUE;
 	HANDLE hThread = INVALID_HANDLE_VALUE;
 	DWORD PID = 0;
+	char s_PID[MAX_PATH];
+	snprintf(s_PID, MAX_PATH, "%d", GetCurrentProcessId());
+	SetEnvironmentVariable("Inj_PID", s_PID);
+	cout << "[*] Injector PID: " << GetCurrentProcessId() << endl;
 	if ((argc>1)&&fexists(argv[1])) {
 		cout << "[*] Spawning process for \"" << argv[1] << "\"" << endl;
 		vector<HANDLE> handles = spawn(argv[1]);
@@ -254,6 +258,7 @@ int main(int argc, char *argv[])
 	if (hThread != INVALID_HANDLE_VALUE) {
 		while (ResumeThread(hThread));
 	}
+	SetEnvironmentVariable("Inj_PID", NULL);
 	cout << "[*] Done!" << endl;
 	return 0;
 }

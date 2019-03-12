@@ -4,7 +4,8 @@
 #define O_MONEY 0x2090
 #define O_ALARM 0x1C6C
 #define O_ALARM_GROW 0x1C68
-#define O_HASHTABLE 0x4
+#define O_ENTS 0x4
+#define O_ENTLISTS 0x2b8
 
 //POINTERS
 #define P_WORLD 0x7FE944

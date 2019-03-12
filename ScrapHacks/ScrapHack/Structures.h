@@ -1,4 +1,5 @@
 #pragma once
+template<typename T>
 struct HashTableEntry;
 struct Vector3 {
 	float x;
@@ -34,17 +35,27 @@ struct Module
 };
 
 struct Entity {
-	void* VMT;
-
+	void* vmt;
+	const char* name;
 };
 
+struct EntityList {
+	const char* name;
+	void* unk_1;
+	void* unk_2;
+	const char* mod;
+	const char* func;
+};
+
+template<typename T>
 struct HashTable {
 	uint32_t size;
-	HashTableEntry** chains;
+	HashTableEntry<T>** chains;
 };
 
+template<typename T>
 struct HashTableEntry {
-	Entity* data;
+	T* data;
 	const char* name;
 	HashTableEntry* next;
 };

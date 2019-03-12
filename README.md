@@ -24,6 +24,7 @@ WIP Memory hacking library
 # Tools used:
 
 - [Python 3](https://python.org/) + [Construct](https://construct.readthedocs.io/en/latest/)
-- [IDA](https://www.hex-rays.com/products/ida/index.shtml) and [x32dbg](https://x64dbg.com/#start)
+- [IDA](https://www.hex-rays.com/products/ida/index.shtml) and [x32dbg](https://x64dbg.com/)
 - [Reclass.NET](https://github.com/ReClassNET/ReClass.NET)
 - [HxD](https://mh-nexus.de/en/hxd/)
+- [Kaitai Struct](http://kaitai.io/)

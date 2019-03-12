@@ -99,9 +99,16 @@ public:
 		}
 	}
 
-	template<typename T>
-	T func() {
-		return reinterpret_cast<T>(this->orig);
+	void* get_orig() {
+		return this->orig;
+	}
+
+	template<typename F,typename ...Args>
+	decltype(auto) func(Args... args) {
+		disable();
+		auto ret=reinterpret_cast<F>(this->orig)(args...);
+		enable();
+		return ret;
 	}
 };
 

@@ -31,15 +31,18 @@ bool initialized = false;
 bool running = true;
 HMODULE mod = 0;
 
-void dump_ht(HashTable* ht) {
+void DllUnload(HMODULE);
+void hook_exit();
+
+size_t dump_ht(HashTable<EntityList>* ht) {
 	size_t cnt = 0;
 	for (size_t i = 0; i < ht->size; ++i) {
-		HashTableEntry* ent = ht->chains[i];
-		if (ent != NULL) {
+		HashTableEntry<EntityList>* ent = ht->chains[i];
+		if (ent) {
 			cout << i << ": ";
-			while (ent != NULL) {
+			while (ent) {
 				++cnt;
-				cout << ent->name;
+				cout << "[ " << ent->name << ": " << ent->data << "]";
 				if (ent->next) {
 					cout << " -> ";
 				};
@@ -48,13 +51,35 @@ void dump_ht(HashTable* ht) {
 			cout << endl;
 		}
 	}
-	cout << cnt << " Entities" << endl;
-	return;
+	cout << cnt << " Entries" << endl;
+	return cnt;
+}
+
+size_t dump_ht(HashTable<Entity>* ht) {
+	size_t cnt = 0;
+	for (size_t i = 0; i < ht->size; ++i) {
+		HashTableEntry<Entity>* ent = ht->chains[i];
+		if (ent) {
+			cout << i << ": ";
+			while (ent) {
+				++cnt;
+				cout << "[ " << ent->name << ": " << ent->data<<"]";
+				if (ent->next) {
+					cout << " -> ";
+				};
+				ent = ent->next;
+			}
+			cout << endl;
+		}
+	}
+	cout << cnt << " Entries" << endl;
+	return cnt;
 }
 
 void MainLoop(HMODULE mod)
 {
 	Sleep(100);
+	hook_exit();
 	cout << "[*] Starting main Loop" << endl;
 	cout << endl;
 	cout << "[F3 ] Unload ScrapHacks" << endl;
@@ -107,8 +132,10 @@ void MainLoop(HMODULE mod)
 		}
 
 		if (key_down_norepeat(VK_F9)) {
-			HashTable *ht = ptr<HashTable>(P_WORLD,O_HASHTABLE);
-			dump_ht(ht);
+			cout << "Entities:" << endl;
+			dump_ht(ptr<HashTable<Entity>>(P_WORLD, O_ENTS));
+			cout << "Entity Lists:" << endl;
+			dump_ht(ptr<HashTable<EntityList>>(P_WORLD, O_ENTLISTS));
 		}
 		if (key_down_norepeat(VK_F10))
 		{
@@ -140,9 +167,7 @@ int hooked_console(const char* cmd) {
 		handle_command(++cmd);
 		return 0;
 	}
-	hook->disable();
-	int ret= hook->func<t_func>()(cmd);
-	hook->enable();
+	int ret= hook->func<t_func>(cmd);
 	return ret;
 }
 
@@ -150,14 +175,62 @@ void hook_console() {
 	Hook::addr(reinterpret_cast<void*>(P_CON_HANDLER) , hooked_console);
 }
 
+void H_Exit(){
+	typedef void(_cdecl *t_func)(void);
+	shared_ptr<Hook> hook = Hook::get(H_Exit);
+	DllUnload(mod);
+	hook->disable();
+	HWND hMainWindow = ptr<HWND>(0x7FA830, 0x7c)[0];
+	SendMessage(hMainWindow, WM_CLOSE, 0, 0);
+	return;
+}
+
+void hook_exit() {
+	//void* p_exit = ptr<void*>(0x7fa830,0x0, 0x20);
+	Hook::addr(reinterpret_cast<void*>(0x4010c0), H_Exit);
+}
+
+DWORD PPID() {
+	DWORD PID = GetCurrentProcessId();
+	HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	PROCESSENTRY32 procentry;
+	if (hSnapShot == INVALID_HANDLE_VALUE) {
+		cout << GetLastErrorAsString() << endl;
+		return -1;
+	}
+	if (Process32First(hSnapShot, &procentry)) {
+		do {
+			if (procentry.th32ProcessID == PID) {
+				CloseHandle(hSnapShot);
+				return procentry.th32ParentProcessID;
+			}
+			procentry.dwSize = sizeof(PROCESSENTRY32);
+		} while (Process32Next(hSnapShot, &procentry));
+	}
+	CloseHandle(hSnapShot);
+	return -1;
+}
+
 void DllPreInit(HMODULE _mod) {
 	char mfn[1024];
+	char inj[MAX_PATH];
+	DWORD INJ_PID=0;
 	InitConsole();
 	GetModuleFileName(0, mfn, 1024);
 	Py = get_modules(P_PY_MODS);
-	cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << endl;
+	cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << " (PID: " << std::hex << GetCurrentProcessId() <<std::dec << ")" << endl;
+	GetEnvironmentVariable("Inj_PID", inj, MAX_PATH);
+	SetEnvironmentVariable("Inj_PID", NULL);
 	hook_console();
-	hook_d3d8();
+	sscanf(inj, "%d", &INJ_PID);
+	cout << INJ_PID << "," << PPID() << endl;
+	if (PPID() == INJ_PID) {
+		hook_d3d8();
+		overlay = true;
+	}
+	else {
+		cout << "[-] No launched by Injector, not hooking DX8" << endl;
+	}
 }
 
 void DllInit(HMODULE _mod)
@@ -182,10 +255,11 @@ void DllInit(HMODULE _mod)
 
 void DllUnload(HMODULE _mod) {
 	SetConsoleCtrlHandler(NULL, false);
+	unhook_d3d8();
 	Hook::clear();
 	scrap_log(0xff0000, "ScrapHacks unloaded!\n");
 	cout << "[+] ScrapHacks unloaded, you can now close the console!" << endl;
 	FreeConsole();
-	PostQuitMessage(0);
+	DestroyWindow(GetConsoleWindow());
 	return;
 }
