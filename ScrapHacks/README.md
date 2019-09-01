@@ -9,3 +9,5 @@ cmake --install .
 ```
 
 this will drop the compiled files into `./build/bin`
+
+(this has only been tested with `Scrap.exe` with a SHA1 checksum of `d2dde960e8eca69d60c2e39a439088b75f0c89fa`, other version might crash if the memory offsets don't match)
