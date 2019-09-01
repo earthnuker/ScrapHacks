@@ -134,9 +134,9 @@ T* __ptr(uintptr_t addr)
 template<typename T>
 T* __ptr(uintptr_t addr, ptrdiff_t offset)
 {
-	cout << "[" << (void*)addr << "] + " << (void*)offset << " = ";
+	//cout << "[" << (void*)addr << "] + " << (void*)offset << " = ";
 	addr = reinterpret_cast<uintptr_t*>(addr)[0] + offset;
-	cout << (void*)addr << endl;;
+	//cout << (void*)addr << endl;;
 	auto ret = __ptr<T>(addr);
 	return ret;
 }
@@ -144,9 +144,9 @@ T* __ptr(uintptr_t addr, ptrdiff_t offset)
 
 template<typename T, typename... Offsets>
 T* __ptr(uintptr_t addr, ptrdiff_t offset, Offsets... offsets) {
-	cout << "[" << (void*)addr << "] + " << (void*)offset << " = ";
+	//cout << "[" << (void*)addr << "] + " << (void*)offset << " = ";
 	addr = reinterpret_cast<uintptr_t*>(addr)[0] + offset;
-	cout << (void*)addr << endl;;
+	//cout << (void*)addr << endl;;
 	auto ret = __ptr<T>(addr, offsets...);
 	return ret;
 }

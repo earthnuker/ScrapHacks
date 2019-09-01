@@ -46,8 +46,10 @@
 - m3d.ini loader @ 0x5f7000
 - SM3 Scene Loader @ 0x650f80 (?)
 - M3D Model Loader @ 0x6665a0 (??)
-- World_Init @ 0x479b20 (???)
+- World_Constructor @ 0x479b20 (???)
+- World_Init @ 0x479b40
 - World_DeInit @ 0x402510
+- Make_World @ 0x479870
 
 # Data Structures
 
@@ -55,31 +57,31 @@
 
 Points to World struct
 
-| Offset | Type       | Description                      |
-|--------|------------|----------------------------------|
-| 0x0000 | `void**`   | Virtual Method Table             |
-| 0x0004 | `uint32_t` | Size of Entity Hashtable         |
-| 0x0008 | `void**`   | Pointer to Entity Hashtable      |
-| 0x02B8 | `uint32_t` | Number of entity lists           |
-| 0x02BC | `void**`   | Pointer to entity list Hashtable |
-| 0x0330 | `float[3]` | Time (why 3 times?)              |
-| 0x1C6C | `float`    | Alarm level                      |
-| 0x1C68 | `float`    | Alarm Grow Level                 |
-| 0x2158 | `???`      | Used in `World_Init`             |
-| 0x2170 | `???`      | Used in `World_Init`             |
-| 0x2180 | `???`      | Used in `World_Init`             |
-| 0x2188 | `???`      | Used in `World_Init`             |
-| 0x218C | `???`      | Used in `World_Init`             |
-| 0x2190 | `???`      | Used in `World_Init`             |
-| 0x2198 | `???`      | Used in `World_Init`             |
-| 0x219C | `???`      | Used in `World_Init`             |
-| 0x21A0 | `???`      | Used in `World_Init`             |
-| 0x21B4 | `???`      | Used in `World_Init`             |
-| 0x21C8 | `???`      | Used in `World_Init`             |
-| 0x2204 | `???`      | Used in `World_Init`             |
-| 0x2230 | `???`      | Used in `World_Init`             |
-| 0x2238 | `???`      | Used in `World_Init`             |
-| 0x2254 | `???`      | Used in `World_Init`             |
+| Offset | Type                     | Description                            |
+| ------ | ------------------------ | -------------------------------------- |
+| 0x0000 | `void**`                 | Virtual Method Table                   |
+| 0x0004 | `uint32_t`               | Size of Entity Hashtable               |
+| 0x0008 | `void**`                 | Pointer to Entity Hashtable            |
+| 0x02B8 | `uint32_t`               | Number of entity lists                 |
+| 0x02BC | `void**`                 | Pointer to entity list Hashtable       |
+| 0x0330 | `float[3]`               | Time (why 3 times?)                    |
+| 0x1C6C | `float`                  | Alarm level                            |
+| 0x1C68 | `float`                  | Alarm Grow Level                       |
+| 0x2158 | `float`                  | Used in `World_Init`                   |
+| 0x2170 | `???`                    | Used in `World_Init`                   |
+| 0x2180 | `float`                  | Used in `World_Init`                   |
+| 0x2188 | `void*`                  | Used in `World_Init`                   |
+| 0x218C | `void*`                  | Used in `World_Init`                   |
+| 0x2190 | `float`                  | Used in `World_Init`                   |
+| 0x2198 | `void*`                  | Used in `World_Init`                   |
+| 0x219C | `void*`                  | Used in `World_Init`                   |
+| 0x21A0 | `void**`                 | Used in `World_Init` (VTable pointer?) |
+| 0x21B4 | `void**`                 | Used in `World_Init` (VTable pointer?) |
+| 0x21C8 | `???`                    | Used in `World_Init`                   |
+| 0x2204 | `uint32_t` or `uint16_t` | Used in `World_Init`                   |
+| 0x2230 | `float`                  | Used in `World_Init`                   |
+| 0x2238 | `???`                    | Used in `World_Init`                   |
+| 0x2254 | `float`                  | Used in `World_Init`                   |
 
 
 ## Entity Hash Table
@@ -89,7 +91,7 @@ Hash-function used: [PJW](https://en.wikipedia.org/wiki/PJW_hash_function) (Same
 Entry format:
 
 | Offset | Type          | Description                    |
-|--------|---------------|--------------------------------|
+| ------ | ------------- | ------------------------------ |
 | 0x0    | `void*`       | Pointer to data                |
 | 0x4    | `const char*` | key as `char*`                 |
 | 0x8    | `void*`       | Pointer to next entry in chain |
@@ -97,7 +99,7 @@ Entry format:
 Data format:
 
 | Offset | Type          | Description              |
-|--------|---------------|--------------------------|
+| ------ | ------------- | ------------------------ |
 | 0x0    | `void**`      | Virtual Method Table (?) |
 | 0x4    | `const char*` | name as string           |
 | 0x14   | `void*`       | pointer to self (why?)   |
@@ -106,11 +108,12 @@ Data format:
 ## Game Window Object (?) Pointer @ `0x7fa380`
 
 | Offset | Type          | Description          |
-|--------|---------------|----------------------|
+| ------ | ------------- | -------------------- |
 | 0x0000 | `void**`      | Virtual Method Table |
 | 0x0004 | `const char*` | Some Model Name (?)  |
 | 0x0008 | `void*`       | Pointer to something |
 | 0x000C | `void*`       | Ditto                |
+
 
 # File Formats
 

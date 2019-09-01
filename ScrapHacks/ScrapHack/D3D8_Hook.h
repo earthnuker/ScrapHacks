@@ -13,12 +13,23 @@ D3DCOLOR color = D3DCOLOR_ARGB(255,255, 0, 0);
 RECT Rect = { 0,0,0,0 };
 D3DRECT panel;
 
+size_t size_ht(HashTable<EntityList>* ht);
+size_t size_ht(HashTable<Entity>* ht);
+
 LPDIRECT3DDEVICE8 Render(LPDIRECT3DDEVICE8 dev) {
 	if (!overlay) {
 		return dev;
 	}
-	char text[1024];
-	snprintf(text, 1024, "ScrapHack v0.1\nFrame: [%lld]", ++frame);
+	char text[4096];
+	int32_t money = 0;
+	size_t num_ents = 0;
+	size_t num_ent_lst = 0;
+	if (ptr<void>(P_WORLD, 0)!=nullptr) {
+		money = ptr<int32_t>(P_WORLD, O_MONEY)[0];
+		num_ents= size_ht(ptr<HashTable<Entity>>(P_WORLD, O_ENTS));
+		num_ent_lst = size_ht(ptr<HashTable<EntityList>>(P_WORLD, O_ENTLISTS));
+	}
+	snprintf(text, 4096, "ScrapHack v0.1\nFrame: [%lld]\nMoney: [%d]\nEntities: [%ld]\nEntity Lists: [%ld]", ++frame, money, num_ents,num_ent_lst);
 	if (m_pFont == nullptr) {
 		D3DXCreateFont(dev, hFont, &m_pFont);
 		CloseHandle(hFont);

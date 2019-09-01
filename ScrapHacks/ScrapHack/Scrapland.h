@@ -13,6 +13,7 @@
 #define P_CON_HANDLER 0x402190
 #define P_SCRAP_LOG 0x4134C0
 #define P_SCRAP_EXEC 0x5a8390
+#define P_SCRAP_EXIT 0x4010c0
 
 //FUNCTION TYPES
 #define T_SCRAP_LOG int(_cdecl*)(unsigned int, const char*)

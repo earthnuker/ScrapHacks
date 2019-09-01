@@ -27,6 +27,11 @@ string GetLastErrorAsString()
 	return message;
 }
 
+void fail(char* msg) {
+	cerr << "[!] "<<msg<<": "<<GetLastErrorAsString()<<endl;
+	exit(1);
+}
+
 string fromhex(string input)
 {
 	transform(input.begin(), input.end(), input.begin(), ::toupper);
@@ -113,7 +118,6 @@ bool HasModule(int PID, const char *modname)
 
 bool ProcRunning(DWORD PID)
 {
-	bool ret = false;
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, PID);
 	if (hSnap == INVALID_HANDLE_VALUE)
 	{
@@ -130,14 +134,12 @@ bool adjustPrivs(HANDLE hProc)
 	TOKEN_PRIVILEGES tkprivs;
 	if (!OpenProcessToken(hProc, (TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY), &hToken))
 	{
-		cout << "[!] Could not Open Process Token: " << GetLastErrorAsString() << endl;
-		return 0;
+		fail("Could not open process token:");
 	}
 	if (!LookupPrivilegeValue(0, SE_DEBUG_NAME, &luid))
 	{
 		CloseHandle(hToken);
-		cout << "[!] Error Looking up Privilege Value: " << GetLastErrorAsString() << endl;
-		return 0;
+		fail("Error looking up privilege value for SE_DEBUG_NAME");
 	}
 	tkprivs.PrivilegeCount = 1;
 	tkprivs.Privileges[0].Luid = luid;
@@ -146,7 +148,7 @@ bool adjustPrivs(HANDLE hProc)
 	CloseHandle(hToken);
 	if (!bRet)
 	{
-		cout << "[!] Could Not Adjust Privileges: " << GetLastErrorAsString() << endl;
+		fail("Could not adjust privileges");
 	}
 	return bRet;
 }
@@ -161,31 +163,32 @@ void InjectDll(DWORD PID)
 	HANDLE hRemThread, hProc;
 	const char *dll_name = DLL_NAME;
 	char dll_full_path[MAX_PATH];
+	char executable_dir[MAX_PATH];
+	GetModuleFileNameA(NULL,executable_dir,MAX_PATH);
 	if (!fexists(dll_name))
 	{
-		cout << "[!] DLL not found!" << endl;
+		fail("DLL not found");
 		return;
 	}
 	cout << "[*] Injecting DLL " << dll_name << " into PID " << PID << endl;
-	cout << "[*] Opening Process Handle" << endl;
+	cout << "[*] Opening process handle" << endl;
 	hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, PID);
 	GetFullPathNameA(dll_name, MAX_PATH, dll_full_path, 0);
-	cout << "[*] Adjusting Privileges of Process" << endl;
+	cout << "[*] Adjusting privileges of process" << endl;
 	adjustPrivs(hProc);
 	if (HasModule(PID, dll_name))
 	{
-		cout << "[*] DLL already Loaded" << endl;
+		cout << "[*] DLL already loaded" << endl;
 		CloseHandle(hProc);
 		return;
 	};
 	if (!fexists(dll_full_path))
 	{
-		cout << "[!] DLL file not found!" << endl;
 		CloseHandle(hProc);
-		return;
+		fail("DLL file not found");
 	}
 	HINSTANCE hK32 = LoadLibraryA("kernel32");
-	cout << "[*] Getting Address of LoadLibrary" << endl;
+	cout << "[*] Getting address of LoadLibrary" << endl;
 	LPVOID LoadLibrary_Address = (LPVOID)GetProcAddress(hK32, "LoadLibraryA");
 	FreeLibrary(hK32);
 	cout << "[+] LoadLibrary is at " << LoadLibrary_Address << endl;
@@ -193,7 +196,7 @@ void InjectDll(DWORD PID)
 	LPVOID mem = VirtualAllocEx(hProc, NULL, strlen(dll_full_path), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	if (mem == NULL)
 	{
-		cout << "[!] Could not Allocate Memory: " << GetLastErrorAsString() << endl;
+		fail("Could not allocate memory");
 		return;
 	}
 	cout << "[*] Writing DLL Name to Process Memory at " << mem << endl;
@@ -228,37 +231,26 @@ int main(int argc, char *argv[])
 	DWORD PID = 0;
 	char s_PID[MAX_PATH];
 	snprintf(s_PID, MAX_PATH, "%d", GetCurrentProcessId());
-	SetEnvironmentVariable("Inj_PID", s_PID);
-	cout << "[*] Injector PID: " << GetCurrentProcessId() << endl;
+	SetEnvironmentVariableA("Inj_PID", s_PID);
 	if ((argc>1)&&fexists(argv[1])) {
+		cout << "[*] Injector PID: " << GetCurrentProcessId() << endl;
 		cout << "[*] Spawning process for \"" << argv[1] << "\"" << endl;
 		vector<HANDLE> handles = spawn(argv[1]);
 		if (handles.empty()) {
-			cout << "[!] Error: " << GetLastErrorAsString() << endl;
-			return -1;
+			fail("Failed to spawn process");
 		}
 		hProc = handles[0];
 		hThread = handles[1];
 		PID = GetProcessId(hProc);
-		cout << "[+] Got PID: " << PID << endl;
 	} else {
-		GetWindowThreadProcessId(FindWindowA("ScrapClass", NULL), &PID);
-		if (PID == 0)
-		{
-			cout << "[*] Waiting for Scrapland to Launch..." << endl;
-		}
-		while (PID == 0)
-		{
-			Sleep(100);
-			GetWindowThreadProcessId(FindWindowA("ScrapClass", NULL), &PID);
-		}
-		cout << "[+] Found PID: " << PID << endl;
+		cerr<<"Usage: " << argv[0] << " <Path to Scrap.exe>"<<endl;
+		return 1;
 	}
 	InjectDll(PID);
 	if (hThread != INVALID_HANDLE_VALUE) {
 		while (ResumeThread(hThread));
 	}
-	SetEnvironmentVariable("Inj_PID", NULL);
+	SetEnvironmentVariableA("Inj_PID", NULL);
 	cout << "[*] Done!" << endl;
 	return 0;
 }
