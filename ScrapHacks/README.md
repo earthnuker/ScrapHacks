@@ -1,11 +1,17 @@
-Open VS 2017 32-bit command prompt (`vcvars32.bat`)
+## Prerequisites
+
+- Visual Studio  2017/2019 (others might work)
+- CMake
+
+## Building
+
+Open VS 32-bit command prompt (`vcvars32.bat`)
 
 ```batch
 mkdir build
 cd build
 cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="" ..
-cmake --build .
-cmake --install .
+cmake --build . --config Release --target install
 ```
 
 this will drop the compiled files into `./build/bin`
