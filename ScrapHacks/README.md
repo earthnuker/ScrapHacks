@@ -10,8 +10,8 @@ Open VS 32-bit command prompt (`vcvars32.bat`)
 ```batch
 mkdir build
 cd build
-cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="" ..
-cmake --build . --config Release --target install
+cmake -G "NMake Makefiles" ..
+cmake --build . --target install
 ```
 
 this will drop the compiled files into `./build/bin`
