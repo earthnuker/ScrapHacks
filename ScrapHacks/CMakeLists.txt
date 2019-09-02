@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 2.6)
-project(ScrapHacks)
+cmake_minimum_required(VERSION 3.1)
+cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+project(ScrapHacks
+        VERSION 1.0
+        DESCRIPTION "Scrapland memory hacking library"
+        LANGUAGES CXX)
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 if(WIN32)
@@ -17,3 +21,4 @@ endif(WIN32)
 
 add_subdirectory(Injector)
 add_subdirectory(ScrapHack)
+

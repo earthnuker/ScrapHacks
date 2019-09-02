@@ -18,4 +18,5 @@ target_link_libraries(ScrapHack
                       d3d8
                       d3dx8
                       legacy_stdio_definitions)
+target_compile_features(ScrapHack PUBLIC cxx_std_11)
 install(TARGETS ScrapHack DESTINATION bin)
