@@ -9,7 +9,7 @@ string GetLastErrorAsString()
 		return "No error";
 	LPSTR messageBuffer = NULL;
 	size_t m_size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+								   NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
 	string message(messageBuffer, m_size);
 	LocalFree(messageBuffer);
 	if (!message.empty() && message[message.length() - 1] == '\n')
@@ -62,7 +62,6 @@ void FreeConsole(bool wait)
 	FreeConsole();
 }
 
-
 bool in_foreground = false;
 BOOL CALLBACK EnumWindowsProcMy(HWND hwnd, LPARAM lParam)
 {
@@ -109,7 +108,6 @@ bool key_down_norepeat(int keycode, int delay = 100)
 	return false;
 }
 
-
 void hexdump(void *addr, size_t count)
 {
 	for (size_t i = 0; i < count; ++i)
@@ -124,35 +122,35 @@ void hexdump(void *addr, size_t count)
 	cout << endl;
 }
 
-template<typename T>
-T* __ptr(uintptr_t addr)
+template <typename T>
+T *__ptr(uintptr_t addr)
 {
-	return reinterpret_cast<T*>(addr);
+	return reinterpret_cast<T *>(addr);
 }
 
-
-template<typename T>
-T* __ptr(uintptr_t addr, ptrdiff_t offset)
+template <typename T>
+T *__ptr(uintptr_t addr, ptrdiff_t offset)
 {
 	//cout << "[" << (void*)addr << "] + " << (void*)offset << " = ";
-	addr = reinterpret_cast<uintptr_t*>(addr)[0] + offset;
+	addr = reinterpret_cast<uintptr_t *>(addr)[0] + offset;
 	//cout << (void*)addr << endl;;
 	auto ret = __ptr<T>(addr);
 	return ret;
 }
 
-
-template<typename T, typename... Offsets>
-T* __ptr(uintptr_t addr, ptrdiff_t offset, Offsets... offsets) {
+template <typename T, typename... Offsets>
+T *__ptr(uintptr_t addr, ptrdiff_t offset, Offsets... offsets)
+{
 	//cout << "[" << (void*)addr << "] + " << (void*)offset << " = ";
-	addr = reinterpret_cast<uintptr_t*>(addr)[0] + offset;
+	addr = reinterpret_cast<uintptr_t *>(addr)[0] + offset;
 	//cout << (void*)addr << endl;;
 	auto ret = __ptr<T>(addr, offsets...);
 	return ret;
 }
 
-template<typename T, typename... Offsets>
-T* ptr(uintptr_t addr, Offsets... offsets) {
+template <typename T, typename... Offsets>
+T *ptr(uintptr_t addr, Offsets... offsets)
+{
 	auto ret = __ptr<T>(addr, offsets...);
 	return ret;
 }

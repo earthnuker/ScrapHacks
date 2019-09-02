@@ -8,12 +8,13 @@ PyMethodDef *find_method_table(uintptr_t base, uintptr_t needle)
 	for (ptrdiff_t offset = 0; offset < 64; ++offset)
 	{
 		uintptr_t instr = reinterpret_cast<uintptr_t *>(base + offset)[0];
-		if (instr == needle) {
+		if (instr == needle)
+		{
 			uintptr_t mod_addr = reinterpret_cast<uintptr_t *>(base + offset - (1 + 4))[0];
-			return reinterpret_cast<PyMethodDef*>(mod_addr);
+			return reinterpret_cast<PyMethodDef *>(mod_addr);
 		}
 	}
-	return reinterpret_cast<PyMethodDef*>(0);
+	return reinterpret_cast<PyMethodDef *>(0);
 }
 
 map<string, Module> get_modules(uintptr_t base)

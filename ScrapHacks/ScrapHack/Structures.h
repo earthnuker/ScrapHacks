@@ -1,18 +1,19 @@
 #pragma once
-template<typename T>
+template <typename T>
 struct HashTableEntry;
-struct Vector3 {
+struct Vector3
+{
 	float x;
 	float y;
 	float z;
 };
 
-struct Matrix3x3 {
+struct Matrix3x3
+{
 	Vector3 a;
 	Vector3 b;
 	Vector3 c;
 };
-
 
 struct PyMethodDef
 {
@@ -31,31 +32,35 @@ struct PyMod
 struct Module
 {
 	PyMod *mod;
-	map<string, PyMethodDef*> methods;
+	map<string, PyMethodDef *> methods;
 };
 
-struct Entity {
-	void* vmt;
-	const char* name;
+struct Entity
+{
+	void *vmt;
+	const char *name;
 };
 
-struct EntityList {
-	const char* name;
-	void* unk_1;
-	void* unk_2;
-	const char* mod;
-	const char* func;
+struct EntityList
+{
+	const char *name;
+	void *unk_1;
+	void *unk_2;
+	const char *mod;
+	const char *func;
 };
 
-template<typename T>
-struct HashTable {
+template <typename T>
+struct HashTable
+{
 	uint32_t size;
-	HashTableEntry<T>** chains;
+	HashTableEntry<T> **chains;
 };
 
-template<typename T>
-struct HashTableEntry {
-	T* data;
-	const char* name;
-	HashTableEntry* next;
+template <typename T>
+struct HashTableEntry
+{
+	T *data;
+	const char *name;
+	HashTableEntry *next;
 };

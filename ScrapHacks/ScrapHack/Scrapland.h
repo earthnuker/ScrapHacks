@@ -16,8 +16,8 @@
 #define P_SCRAP_EXIT 0x4010c0
 
 //FUNCTION TYPES
-#define T_SCRAP_LOG int(_cdecl*)(unsigned int, const char*)
-#define T_SCRAP_EXEC int(_cdecl*)(const char*)
+#define T_SCRAP_LOG int(_cdecl *)(unsigned int, const char *)
+#define T_SCRAP_EXEC int(_cdecl *)(const char *)
 
 auto scrap_log = (T_SCRAP_LOG)P_SCRAP_LOG;
 auto scrap_exec = (T_SCRAP_EXEC)P_SCRAP_EXEC;
