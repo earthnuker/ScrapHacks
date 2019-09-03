@@ -2,6 +2,11 @@
 - Engine: ScrapEngine
 - Ingame Scripting Language: Python 1.5.2
 
+# Launch options:
+
+- `-console`: open external console window on start
+- `-wideWindow`: start game in widescreen mode
+
 # Functions identified:
 
 ## Ingame-Console (Ctrl+\^ or right click on titlebar and select "switch console") (Handler@0x402190):
