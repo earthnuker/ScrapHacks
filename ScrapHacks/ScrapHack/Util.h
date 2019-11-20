@@ -37,12 +37,14 @@ void SetupStreams()
 
 void SetupConsole()
 {
-	if (!AllocConsole())
-	{
-		FreeConsole();
-		AllocConsole();
+	if (!AttachConsole(-1)) {
+		if (!AllocConsole())
+		{
+			FreeConsole();
+			AllocConsole();
+		}
+		AttachConsole(GetCurrentProcessId());
 	}
-	AttachConsole(GetCurrentProcessId());
 	SetupStreams();
 }
 
