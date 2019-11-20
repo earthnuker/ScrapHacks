@@ -15,6 +15,9 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     DisableThreadLibraryCalls(hModule);
     DllPreInit(hModule);
     hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)DllInit, hModule, 0, 0);
+    if (hThread) {
+      CloseHandle(hThread);
+    }
     break;
   case DLL_PROCESS_DETACH:
     DllUnload(hModule);
