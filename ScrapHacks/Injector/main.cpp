@@ -32,56 +32,6 @@ void fail(char *msg)
     exit(1);
 }
 
-string fromhex(string input)
-{
-    transform(input.begin(), input.end(), input.begin(), ::toupper);
-    string hc = "0123456789ABCDEF";
-    string o = "";
-    int n = 0;
-    int v = 0;
-    for (unsigned char c : input)
-    {
-        if (hc.find(c) != size_t(-1))
-        {
-            if ((n++) % 2 == 0)
-            {
-                v = hc.find(c) << 4;
-            }
-            else
-            {
-                o += char(v + hc.find(c));
-            }
-        }
-        else
-        {
-            cout << "Invalid Character in hex string" << endl;
-            return "";
-        }
-    }
-    return o;
-}
-
-vector<string> split(string str, char sep)
-{
-    vector<string> ret;
-    string part;
-    for (auto n : str)
-    {
-        if (n == sep)
-        {
-            ret.push_back(part);
-            part.clear();
-        }
-        else
-        {
-            part = part + n;
-        }
-    }
-    if (part != "")
-        ret.push_back(part);
-    return ret;
-}
-
 bool fexists(const char *filename)
 {
     ifstream ifile(filename);
@@ -116,16 +66,6 @@ bool HasModule(int PID, const char *modname)
     return false;
 }
 
-bool ProcRunning(DWORD PID)
-{
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, PID);
-    if (hSnap == INVALID_HANDLE_VALUE)
-    {
-        return false;
-    }
-    CloseHandle(hSnap);
-    return true;
-}
 
 bool adjustPrivs(HANDLE hProc)
 {
@@ -211,54 +151,19 @@ void InjectDll(DWORD PID)
     return;
 }
 
-vector<HANDLE> spawn(char *binary)
-{
-    STARTUPINFO startupinfo;
-    PROCESS_INFORMATION processinfo;
-    ZeroMemory(&startupinfo, sizeof(startupinfo));
-    ZeroMemory(&processinfo, sizeof(processinfo));
-    startupinfo.cb = sizeof(startupinfo);
-    if (!CreateProcessA(NULL, binary, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupinfo, &processinfo))
-    {
-        return {};
-    }
-    return {processinfo.hProcess, processinfo.hThread};
-}
 
 int main(int argc, char *argv[])
 {
-    string prog;
-    HANDLE hProc = INVALID_HANDLE_VALUE;
-    HANDLE hThread = INVALID_HANDLE_VALUE;
     DWORD PID = 0;
-    char s_PID[MAX_PATH];
-    snprintf(s_PID, MAX_PATH, "%d", GetCurrentProcessId());
-    SetEnvironmentVariableA("Inj_PID", s_PID);
-    if ((argc > 1) && fexists(argv[1]))
-    {
-        cout << "[*] Injector PID: " << GetCurrentProcessId() << endl;
-        cout << "[*] Spawning process for \"" << argv[1] << "\"" << endl;
-        vector<HANDLE> handles = spawn(argv[1]);
-        if (handles.empty())
-        {
-            fail("Failed to spawn process");
-        }
-        hProc = handles[0];
-        hThread = handles[1];
-        PID = GetProcessId(hProc);
+    HWND ScrapWin=FindWindow("ScrapClass",NULL);
+    if (!ScrapWin) {
+        cerr<<"Error: Scrapland window not found!"<<endl;
+        exit(1);
     }
-    else
-    {
-        cerr << "Usage: " << argv[0] << " <Path to Scrap.exe>" << endl;
-        return 1;
+    GetWindowThreadProcessId(ScrapWin,&PID);
+    if (PID) {
+        InjectDll(PID);
+    } else {
+        fail("Error getting PID");
     }
-    InjectDll(PID);
-    if (hThread != INVALID_HANDLE_VALUE)
-    {
-        while (ResumeThread(hThread))
-            ;
-    }
-    SetEnvironmentVariableA("Inj_PID", NULL);
-    cout << "[*] Done!" << endl;
-    return 0;
 }
