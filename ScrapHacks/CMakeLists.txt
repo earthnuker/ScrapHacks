@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+
 project(ScrapHacks
         VERSION 1.0
         DESCRIPTION "Scrapland memory hacking library"
@@ -18,7 +19,5 @@ if(WIN32)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
   endif(MSVC)
 endif(WIN32)
-
 add_subdirectory(Injector)
 add_subdirectory(ScrapHack)
-
