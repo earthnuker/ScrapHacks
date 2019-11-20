@@ -120,6 +120,15 @@ public:
 	}
 
 	template <typename F, typename... Args>
+	void func_void(Args... args)
+	{
+		disable();
+		reinterpret_cast<F>(this->orig)(args...);
+		enable();
+		return;
+	}
+
+	template <typename F, typename... Args>
 	decltype(auto) func(Args... args)
 	{
 		disable();
