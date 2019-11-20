@@ -230,67 +230,20 @@ void H_Exit()
     return;
 }
 
-void hook_exit()
-{
-    Hook::addr(reinterpret_cast<void *>(P_SCRAP_EXIT), H_Exit);
-}
-
-DWORD PPID()
-{
-    DWORD PID = GetCurrentProcessId();
-    HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    PROCESSENTRY32 procentry;
-    if (hSnapShot == INVALID_HANDLE_VALUE)
-    {
-        cout << GetLastErrorAsString() << endl;
-        return -1;
-    }
-    if (Process32First(hSnapShot, &procentry))
-    {
-        do
-        {
-            if (procentry.th32ProcessID == PID)
-            {
-                CloseHandle(hSnapShot);
-                return procentry.th32ParentProcessID;
-            }
-            procentry.dwSize = sizeof(PROCESSENTRY32);
-        } while (Process32Next(hSnapShot, &procentry));
-    }
-    CloseHandle(hSnapShot);
-    return -1;
-}
 
 void DllPreInit(HMODULE _mod)
 {
     char mfn[1024];
-    char inj[MAX_PATH];
-    DWORD INJ_PID = 0;
     InitConsole();
     GetModuleFileNameA(0, mfn, 1024);
     Py = get_modules(P_PY_MODS);
     cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << " (PID: " << std::hex << GetCurrentProcessId() << std::dec << ")" << endl;
-    GetEnvironmentVariableA("Inj_PID", inj, MAX_PATH);
-    SetEnvironmentVariableA("Inj_PID", NULL);
-    hook_console();
-    sscanf_s(inj, "%d", &INJ_PID);
-    cout << INJ_PID << "," << PPID() << endl;
-    if (PPID() == INJ_PID)
-    {
-        hook_d3d8();
-        overlay = true;
-    }
-    else
-    {
-        cout << "[-] No launched by Injector, not hooking DX8" << endl;
-    }
 }
 
 void DllInit(HMODULE _mod)
 {
     initialized = true;
     mod = _mod;
-    Sleep(3000);
     cout << "[*] World: " << ptr<void>(P_WORLD, 0) << endl;
     cout << "[*] Importing python dbg module" << endl;
     scrap_exec("import dbg");

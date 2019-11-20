@@ -154,3 +154,51 @@ T *ptr(uintptr_t addr, Offsets... offsets)
 	auto ret = __ptr<T>(addr, offsets...);
 	return ret;
 }
+
+
+DWORD PPID()
+{
+    DWORD PID = GetCurrentProcessId();
+    HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32 procentry;
+    if (hSnapShot == INVALID_HANDLE_VALUE)
+    {
+        cout << GetLastErrorAsString() << endl;
+        return -1;
+    }
+    if (Process32First(hSnapShot, &procentry))
+    {
+        do
+        {
+            if (procentry.th32ProcessID == PID)
+            {
+                CloseHandle(hSnapShot);
+                return procentry.th32ParentProcessID;
+            }
+            procentry.dwSize = sizeof(PROCESSENTRY32);
+        } while (Process32Next(hSnapShot, &procentry));
+    }
+    CloseHandle(hSnapShot);
+    return -1;
+}
+
+vector<string> split(string str, char sep)
+{
+    vector<string> ret;
+    string part;
+    for (auto n : str)
+    {
+        if (n == sep)
+        {
+            ret.push_back(part);
+            part.clear();
+        }
+        else
+        {
+            part = part + n;
+        }
+    }
+    if (part != "")
+        ret.push_back(part);
+    return ret;
+}
