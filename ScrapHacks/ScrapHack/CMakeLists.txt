@@ -14,9 +14,11 @@ link_directories(AFTER ${SOURCE_DIR}/8.0/lib/)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 add_compile_definitions(POINTER_64=__ptr64)
 add_library(ScrapHack SHARED ScrapHack.cpp dllmain.cpp)
+add_dependencies(ScrapHack DirectX)
 target_link_libraries(ScrapHack
                       d3d8
                       d3dx8
+                      dxerr8
                       legacy_stdio_definitions)
 target_compile_features(ScrapHack PUBLIC cxx_std_11)
 install(TARGETS ScrapHack DESTINATION bin)
