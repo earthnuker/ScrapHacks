@@ -1,5 +1,4 @@
 #include <string>
-#include <sstream>
 #include <vector>
 #include <map>
 #include <iomanip>
@@ -18,15 +17,18 @@ using namespace std;
 #include "Hook.h"
 #include "VMT_Hook.h"
 #include "D3D8_Hook.h"
-
+#include "REPL.h"
+bool do_sleep=true;
 HMODULE hD3D8Dll = 0;
 
 bool initialized = false;
 bool running = true;
+bool redirect_console = false;
 HMODULE mod = 0;
 
 void DllUnload(HMODULE);
-void hook_exit();
+int hooked_console(const char *);
+void H_Exit();
 
 size_t size_ht(HashTable<EntityList> *ht)
 {
@@ -119,9 +121,13 @@ size_t dump_ht(HashTable<Entity> *ht)
 void MainLoop(HMODULE mod)
 {
     Sleep(100);
-    hook_exit();
+    Hook::addr(reinterpret_cast<void *>(P_SCRAP_EXIT), H_Exit);
+    Hook::addr(reinterpret_cast<void *>(P_D3DCHECK),hook_d3d8);
+    Hook::addr(reinterpret_cast<void *>(P_CON_HANDLER), hooked_console);
+    overlay=true;
     cout << "[*] Starting main Loop" << endl;
     cout << endl;
+    cout << "[F2 ] Redirect game console to ScapHacks console" << endl;
     cout << "[F3 ] Unload ScrapHacks" << endl;
     cout << "[F5 ] Show Overlay" << endl;
     cout << "[F6 ] Show Alarm status" << endl;
@@ -134,10 +140,13 @@ void MainLoop(HMODULE mod)
     while (running)
     {
         Sleep(100);
-
         while (key_down('F'))
         {
             scrap_exec("dbg.brake()");
+        }
+        if (key_down_norepeat(VK_F2))
+        {
+            redirect_console = !redirect_console;
         }
         if (key_down_norepeat(VK_F3))
         {
@@ -148,6 +157,7 @@ void MainLoop(HMODULE mod)
         {
             overlay = !overlay;
         }
+        
         if (key_down_norepeat(VK_F6))
         {
 
@@ -193,31 +203,17 @@ void InitConsole()
     SetupConsole(me);
 }
 
-void handle_command(const char *cmd)
-{
-    cout << "CMD: " << cmd << endl;
-    scrap_log(0x00ff00, "HAXX: ");
-    scrap_log(0x00ff00, cmd);
-    scrap_log(0x00ff00, "\n");
-    return;
-}
-
 int hooked_console(const char *cmd)
 {
     typedef int(_cdecl * t_func)(const char *);
-    shared_ptr<Hook> hook = Hook::get(hooked_console);
     if (cmd[0] == '$')
     {
         handle_command(++cmd);
         return 0;
     }
+    shared_ptr<Hook> hook = Hook::get(hooked_console);
     int ret = hook->func<t_func>(cmd);
     return ret;
-}
-
-void hook_console()
-{
-    Hook::addr(reinterpret_cast<void *>(P_CON_HANDLER), hooked_console);
 }
 
 void H_Exit()
