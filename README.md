@@ -4,6 +4,7 @@
 * `parse_save.py`: Dumps information extracted from Save file
 * `scrapper.py`: Extractor and Repacker for *.packed files, needs the `construct` and `tqdm` python modules and python 3.x
  - Run `scrapper.py -h` for help
+* `r2_analyze.py`: uses radare2 to parse and label a lot of interesting stuff in the `Scrap.exe` binary
 * `lib/dbg.py`: general Script for poking around inside the game's scripting system
  - Run `import dbg` inside the Game's Console,
   this will load all builtin modules and enable godmode
