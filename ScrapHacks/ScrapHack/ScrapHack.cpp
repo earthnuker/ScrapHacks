@@ -15,10 +15,8 @@ using namespace std;
 #include "Structures.h"
 #include "Py_Utils.h"
 #include "Hook.h"
-#include "VMT_Hook.h"
 #include "D3D8_Hook.h"
 #include "REPL.h"
-bool do_sleep=true;
 HMODULE hD3D8Dll = 0;
 
 bool initialized = false;
