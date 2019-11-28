@@ -55,6 +55,7 @@
 - World_Init @ 0x479b40
 - World_DeInit @ 0x402510
 - Make_World @ 0x479870
+- RenderFrame(?) @ 0x602a70
 
 # Data Structures
 
@@ -109,15 +110,6 @@ Data format:
 | 0x4    | `const char*` | name as string           |
 | 0x14   | `void*`       | pointer to self (why?)   |
 | 0x28   | `float[3]`    | Position in Game World   |
-
-## Game Window Object (?) Pointer @ `0x7fa380`
-
-| Offset | Type          | Description          |
-| ------ | ------------- | -------------------- |
-| 0x0000 | `void**`      | Virtual Method Table |
-| 0x0004 | `const char*` | Some Model Name (?)  |
-| 0x0008 | `void*`       | Pointer to something |
-| 0x000C | `void*`       | Ditto                |
 
 
 # File Formats

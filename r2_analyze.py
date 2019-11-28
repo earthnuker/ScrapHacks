@@ -110,6 +110,7 @@ functions = {
     0x479B40: "world_init",
     0x402510: "world_deinit",
     0x479870: "make_world",
+    0x602a70: "render_frame"
 }
 
 for t in types:
