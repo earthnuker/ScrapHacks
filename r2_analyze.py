@@ -52,7 +52,7 @@ r2_cmd("aaaaa")
 #0x413ee0
 
 #0x7d2094 refcnt
-flags = {0x7FE944: ("World_Ptr", 4), 0x79C698: ("Py_Mods", 4)}
+flags = {0x7FE944: ("P_World", 4), 0x79C698: ("Py_Mods", 4),0x852914: ("P_D3D8_Dev",4)}
 
 types = ["struct PyMethodDef {char *ml_name; void *ml_meth; int ml_flags; char *ml_doc;};"]
 
@@ -70,6 +70,9 @@ func_sigs = {
     0x419950: "int fopen_2(const char* filename);",
     0x41AB50: "int open_pak(const char* filename, int unk_1,void* unk_ptr);",
     0x404460: "int register_c_callback(const char* name,void* func);"
+    0x414070: "void throw_assertion_2(const char* check,const char* file, unsigned int line);"
+    0x5FBC50: "void throw_assertion_1(const char* check,const char* file,const char* date, unsigned int line);",
+    0x5bc140: "static char* convertsimple1(void *arg, char **p_format, void *p_va);"
 }
 
 functions = {
@@ -154,30 +157,38 @@ def c_callbacks():
 
 def assertions():
     assertions = {}
-    for a_addr in ["fcn.throw_assertion_1", "fcn.throw_assertion_2"]:
+    for (n_args,a_addr) in [(4,"fcn.throw_assertion_1"), (3,"fcn.throw_assertion_2")]:
         print(f"[*] Parsing C assertions for {a_addr}")
         res = r2_cmd(f"/r {a_addr} ~CALL[1]").splitlines()
         print()
         for line in tqdm(res, ascii=True):
             addr = line.strip()
-            file, msg = r2_cmdJ(f"s {addr};so -2;pij 2")  # seek and print disassembly
+            dis=r2_cmdJ(f"s {addr};so -{n_args};pij {n_args}")  # seek and print disassembly
+            if n_args==4:
+                file, msg, date, line = dis
+            elif n_args==3:
+                date=None
+                file, msg, line = dis
             try:
                 file = r2_cmd(f"psz @{file.refs[0].addr}").strip()
                 msg = r2_cmd(f"psz @{msg.refs[0].addr}").strip()
-                path = os.path.abspath(file.replace("\\\\", "\\"))
+                if date:
+                    r2_cmd(f"psz @{date.refs[0].addr}").strip()
+                line=line.val
+                file=file.replace("\\\\", "\\")
+                os.path.isabs(file):
+                    file = os.path.abspath(file)
                 assertions.setdefault(path, [])
-                assertions[path].append([addr, msg])
+                assertions[path].append({'line':line,'date':date,'addr':addr,'msg': msg})
             except:
                 pass
     for path in assertions:
-        assertions[path].sort(key=lambda v:int(v[0],16))
+        assertions[path].sort(key=lambda v:v['line'])
     return assertions
 
-
-def world():
+def bb_refs(addr):
     ret={}
-    print("[*] Parsing World offsets")
-    res = r2_cmd("/r loc.World_Ptr ~fcn[0,1]").splitlines()
+    res = r2_cmd(f"/r {addr} ~fcn[0,1]").splitlines()
     print()
     for ent in res:
         func,hit=ent.split()
@@ -185,6 +196,15 @@ def world():
         for ins in r2_cmdJ(f"pdbj @{hit}"):
             ret[hit]['asm'].append(ins.disasm)
     return ret
+
+def world():
+    print("[*] Parsing World offsets")
+    return bb_refs("loc.P_World")
+
+def render():
+    print("[*] Parsing D3D_Device offsets")
+    return bb_refs("loc.P_D3D8_Dev")
+
 
 def py_mods():
     print("[*] Parsing Python modules")
@@ -260,6 +280,7 @@ ret = dict(
     assertions=assertions(),
     vtables=vtables(),
     world=world(),
+    render=render(),
 )
 
 r2_cmd("aaaaa") # Propagate type infos

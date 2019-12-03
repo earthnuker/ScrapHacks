@@ -2,6 +2,7 @@
 
 - Visual Studio  2017/2019 (others might work)
 - CMake
+- Python 3.6 or newer
 
 ## Building
 
@@ -11,13 +12,22 @@ Open VS 32-bit command prompt (`vcvars32.bat`)
 mkdir build
 cd build
 cmake -G"NMake Makefiles" ..
-cmake --build . --target install
+mkdir bin
+cd bin
+cmake --build .. --target install
 ```
 
 this will drop the compiled files into `./build/bin`
 
-(this has only been tested with a (cracked/deobfuscated) `Scrap.exe` v1.0 with a SHA1 checksum of `d2dde960e8eca69d60c2e39a439088b75f0c89fa`, other version might crash if the memory offsets don't match)
+## Usage
 
-## TODO
+- create a `lib` folder next to `Scrapland.exe`
+- copy `ScrapHack.pyd` into said folder
+- open the ingame console (Ctrl+^)
+- type `import ScrapHack`
+- Done!
 
-- Injector-less version (patch Scrap.exe to load DLL)
+## Notes
+
+(this has only been tested with a (cracked/de-obfuscated) `Scrap.exe` v1.0 with a SHA1 checksum of `d2dde960e8eca69d60c2e39a439088b75f0c89fa`, other version might crash if the memory offsets don't match)
+
