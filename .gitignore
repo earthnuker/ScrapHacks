@@ -263,3 +263,4 @@ __pycache__/
 .history
 
 ScrapHacks/build/*
+.vscode/c_cpp_properties.json

@@ -59,6 +59,8 @@
 
 # Data Structures
 
+D3D8-Device @ `0x852914`
+
 ## Game World/State Pointer @ `0x7fe944`
 
 Points to World struct
