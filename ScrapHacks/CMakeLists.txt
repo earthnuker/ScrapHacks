@@ -35,7 +35,7 @@ ExternalProject_Get_Property(DirectX SOURCE_DIR)
 include_directories(AFTER ${SOURCE_DIR}/8.0/include/)
 link_directories(AFTER ${SOURCE_DIR}/8.0/lib/)
 
-find_package (Python3 REQUIRED COMPONENTS Interpreter)
+find_package (Python3 3.6 REQUIRED COMPONENTS Interpreter)
 
 add_custom_target(
   MAKE_D3D8_VMT ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/make_D3D8_VMT.py ${CMAKE_CURRENT_SOURCE_DIR}/src/D3D8_VMT.hpp ${SOURCE_DIR}/8.0/include/d3d8.h
