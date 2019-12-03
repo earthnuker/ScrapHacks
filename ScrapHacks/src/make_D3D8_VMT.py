@@ -27,5 +27,5 @@ with open(outfile,"w") as ofh:
     for name in sorted(VMTs.keys()):
         print(f"namespace {name} {{",file=ofh)
         for method,idx in sorted(VMTs[name].items(),key=lambda v:v[1]):
-            print(f"\tconst size_t m_{method} = {idx};",file=ofh)
+            print(f"    const size_t m_{method} = {idx};",file=ofh)
         print("}",file=ofh)
