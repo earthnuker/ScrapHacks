@@ -6,18 +6,14 @@
 
 ## Building
 
-Open VS 32-bit command prompt (`vcvars32.bat`)
+Open VS 32-bit command prompt (`vcvars32.bat`) and run the following two commands
 
 ```batch
-mkdir build
-cd build
-cmake -G"NMake Makefiles" ..
-mkdir bin
-cd bin
-cmake --build .. --target install
+cmake -G"NMake Makefiles" -B build
+cmake --build build --target install
 ```
 
-this will drop the compiled files into `./build/bin`
+this will generate `ScrapHack.pyd` files in `./build`
 
 ## Usage
 
@@ -25,6 +21,7 @@ this will drop the compiled files into `./build/bin`
 - copy `ScrapHack.pyd` into said folder
 - open the ingame console (Ctrl+^)
 - type `import ScrapHack`
+- type `$help`
 - Done!
 
 ## Notes

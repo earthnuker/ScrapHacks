@@ -5,6 +5,7 @@ project(ScrapHacks
         VERSION 1.0
         DESCRIPTION "Scrapland memory hacking library"
         LANGUAGES CXX)
+
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 if(WIN32)
@@ -31,11 +32,13 @@ ExternalProject_Add(
   URL
     https://archive.org/download/DirectX.8.0a.SDK_includes_libs_only/DirectX.8.0a.SDK.zip
   URL_HASH SHA1=39f168336d0df92ff14d62d5e3aef1b9e3191312)
+
+
 ExternalProject_Get_Property(DirectX SOURCE_DIR)
 include_directories(AFTER ${SOURCE_DIR}/8.0/include/)
 link_directories(AFTER ${SOURCE_DIR}/8.0/lib/)
 
-find_package (Python3 3.6 REQUIRED COMPONENTS Interpreter)
+find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter)
 
 add_custom_target(
   MAKE_D3D8_VMT ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/make_D3D8_VMT.py ${CMAKE_CURRENT_SOURCE_DIR}/src/D3D8_VMT.hpp ${SOURCE_DIR}/8.0/include/d3d8.h
@@ -88,4 +91,3 @@ target_link_libraries(ScrapHack
                       # PYTHON15
                       legacy_stdio_definitions)
 target_compile_features(ScrapHack PUBLIC cxx_std_11)
-install(TARGETS ScrapHack DESTINATION bin)
