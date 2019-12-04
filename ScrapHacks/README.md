@@ -13,7 +13,7 @@ cmake -G"NMake Makefiles" -B build
 cmake --build build --target install
 ```
 
-this will generate `ScrapHack.pyd` files in `./build`
+this will generate `ScrapHack.pyd` in `./build`
 
 ## Usage
 
