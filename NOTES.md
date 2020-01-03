@@ -2,6 +2,7 @@
 
 - Engine: ScrapEngine
 - Ingame Scripting Language: Python 1.5.2
+- Interesting memory locations and functions are noted in `config.yml`
 
 # Launch options:
 
@@ -32,11 +33,6 @@
   * `idiota`
   * `capullo`
 
-## Python Stuff
-
-- `0x79C698`: Modules List (Module Name as `char*`  followed by Pointer to Init Function)
-- `0x5A8FB0`: InitPyMod
-- `0x5A8390`: PyExec
 
 ## Other interesting Memory Addresses
 
