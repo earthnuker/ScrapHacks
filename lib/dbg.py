@@ -244,6 +244,20 @@ def nuke():
         E = Scrap.GetEntity(E.NextInSlot)
 
 
+def test_func():
+    E = Scrap.GetFirst()
+    me = Scrap.UsrEntity(0)
+    while E:
+        if E.Name == me.Name:
+            E = Scrap.GetEntity(E.NextInSlot)
+        try:
+            E.Money=1024*1024*1024
+            # SAI.SetStateVehicle(8,me.Name,E.Name)
+        except:
+            pass
+        E = Scrap.GetEntity(E.NextInSlot)
+
+
 def become(name):
     import CharConversor
     enable_all_conv()

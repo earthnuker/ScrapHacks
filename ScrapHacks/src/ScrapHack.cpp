@@ -9,12 +9,6 @@
 
 #include <Windows.h>
 
-// Socket stuff
-
-#include <Ws2tcpip.h>
-#include <stdio.h>
-#include <winsock2.h>
-
 using namespace std;
 
 #include "D3D8_Hook.hpp"
@@ -33,22 +27,6 @@ HMODULE hMod = nullptr;
 void DllUnload();
 int hooked_console(const char *);
 void hook_exit();
-
-int hook_recvfrom(SOCKET s, char *buf, int len, int flags, sockaddr *from,
-                  int *fromlen) {
-    typedef decltype(&hook_recvfrom) t_func;
-    shared_ptr<Hook> hook = Hook::get(hook_recvfrom);
-    int ret = hook->func<t_func>(s, buf, len, flags, from, fromlen);
-    return ret;
-};
-
-int hook_sendto(SOCKET s, const char *buf, int len, int flags,
-                const sockaddr *to, int tolen) {
-    typedef decltype(&hook_sendto) t_func;
-    shared_ptr<Hook> hook = Hook::get(hook_sendto);
-    int ret = hook->func<t_func>(s, buf, len, flags, to, tolen);
-    return ret;
-};
 
 void setup_hooks() {
     Hook::addr(reinterpret_cast<void *>(P_SCRAP_EXIT), hook_exit);
@@ -127,7 +105,6 @@ void hook_exit() {
 void DllInit(HMODULE mod) {
     hMod = mod;
     char mfn[1024];
-    InitConsole();
     GetModuleFileNameA(0, mfn, 1024);
     Py = get_modules(P_PY_MODS);
     cout << "[+] ScrapHacks v0.1 Loaded in " << mfn << " (PID: " << std::hex
@@ -150,16 +127,22 @@ void DllInit(HMODULE mod) {
 }
 
 void *H_port_FixupExtension(char *name, char *filename) {
+    cout<<"FixupExtension: "<<name<<": "<<filename<<endl;
     Hook::drop(H_port_FixupExtension);
     return NULL;
 }
 
 void *H_PyEval_CallObjectWithKeywords(void *func, void *arg, void *kwarg) {
+    cout<<"PyEval_CallObjectWithKeywords:"<<endl;
+    cout<<"\t func: "<<func<<endl;
+    cout<<"\t arg: "<<arg<<endl;
+    cout<<"\t kwarg: "<<kwarg<<endl;
     Hook::drop(H_PyEval_CallObjectWithKeywords);
     return NULL;
 }
 
 void DllPreInit() {
+    InitConsole();
     Hook::addr(reinterpret_cast<void *>(0x5a9ca0), H_port_FixupExtension);
     Hook::addr(reinterpret_cast<void *>(0x5cdb00),
                H_PyEval_CallObjectWithKeywords);

@@ -1,5 +1,7 @@
 #pragma once
+using namespace std;
 template <typename T> struct HashTableEntry;
+
 struct Vector3 {
     float x;
     float y;
@@ -7,9 +9,9 @@ struct Vector3 {
 };
 
 struct Matrix3x3 {
-    Vector3 a;
-    Vector3 b;
-    Vector3 c;
+    struct Vector3 a;
+    struct Vector3 b;
+    struct Vector3 c;
 };
 
 struct PyMethodDef {
@@ -42,9 +44,41 @@ struct EntityList {
     const char *func;
 };
 
+struct GameVar {
+    struct GameVar* next;
+    const char* name;
+    const char* desc;
+    uint8_t type;
+    uint8_t subtype;
+    uint16_t unk;
+    void* value;
+    void* default;
+};
+
+struct PakEntry {
+    unsigned char* filename;
+    uint32_t locked;
+    void* data;
+    uint32_t seek;
+};
+
+struct HashIndexEntry {
+    uint32_t offset;
+    uint32_t size;
+    uint32_t status;
+    const char* name;
+    struct HashIndexEntry* next;
+};
+
+struct HashIndex {
+    uint32_t size;
+    struct HashIndexEntry** data;
+};
+
+
 template <typename T> struct HashTable {
     uint32_t size;
-    HashTableEntry<T> **chains;
+    struct HashTableEntry<T> **chains;
 };
 
 template <typename T> struct HashTableEntry {

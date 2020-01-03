@@ -6,5 +6,9 @@
         "markdown",
         "latex",
         "plaintext"
-    ]
+    ],
+    "files.associations": {
+        "xstring": "cpp",
+        "iterator": "cpp"
+    }
 }

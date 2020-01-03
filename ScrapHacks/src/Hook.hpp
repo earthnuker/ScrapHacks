@@ -4,8 +4,28 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <vector>
+#include <asmjit/asmjit.h>
 
 using namespace std;
+
+/*
+vector<uint8_t> make_trampoline(uintptr_t orig,uintptr_t hook) {
+    using namespace asmjit;
+    JitRuntime rt;
+    CodeHolder code;
+    CodeInfo ci=rt.codeInfo();
+    code.init(ci);
+    x86::Assembler a(&code);
+    a.jmp(hook);
+    a.ret();
+    code.flatten();
+    code.resolveUnresolvedLinks();
+    code.relocateToBase(orig);
+    size_t code_size=code.sectionById(0)->buffer().size();
+    code.copyFlattenedData((void*)orig, code_size, CodeHolder::kCopyWithPadding);
+}
+*/
 
 class Hook {
   private:
@@ -19,6 +39,7 @@ class Hook {
 
   public:
     Hook(void *func, void *detour) {
+        // TODO: build jmp_bytes using asmjit
         uintptr_t dest = reinterpret_cast<uintptr_t>(detour);
         uintptr_t src = reinterpret_cast<uintptr_t>(func);
         this->orig = func;
@@ -83,7 +104,7 @@ class Hook {
     }
 
     void disable() {
-        if (enabled) {
+        if (this->enabled) {
             // cout << "Disabling: [" << this->orig << " <- " << this->detour <<
             // "]"
             // << endl;
@@ -91,7 +112,7 @@ class Hook {
                            PAGE_EXECUTE_READWRITE, NULL);
             memcpy(this->orig, this->orig_bytes, 1 + 4 + 1);
             VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
-            enabled = false;
+            this->enabled = false;
         }
     }
     void enable() {

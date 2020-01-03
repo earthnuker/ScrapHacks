@@ -29,4 +29,4 @@ WIP Memory hacking library
 - [Reclass.NET](https://github.com/ReClassNET/ReClass.NET)
 - [HxD](https://mh-nexus.de/en/hxd/)
 - [Kaitai Struct](http://kaitai.io/)
-- [Radare2](https://www.radare.org/)
+- [Radare2](https://www.radare.org/) + [Cutter](https://cutter.re/)

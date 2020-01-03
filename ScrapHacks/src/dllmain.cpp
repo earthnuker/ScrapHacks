@@ -1,6 +1,4 @@
-
 #include <Windows.h>
-
 
 #define DLL_EXPORT extern "C" __declspec(dllexport)
 

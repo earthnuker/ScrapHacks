@@ -9,9 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "Structures.hpp"
-#include "Py_Utils.hpp"
-
 using namespace std;
 
 #define DLL_EXPORT extern "C" __declspec(dllexport)
@@ -116,18 +113,56 @@ bool key_down_norepeat(int keycode, int delay = 100) {
     return false;
 }
 
-string hexdump_s(void *addr, size_t count=0xff) {
+bool addr_exists(void* addr) {
+    MEMORY_BASIC_INFORMATION mbi;
+    if (!VirtualQuery(addr,&mbi,sizeof(mbi))) {
+        return false;
+    };
+    return true;
+}
+
+bool can_read(void* addr) {
+    MEMORY_BASIC_INFORMATION mbi;
+    if (!VirtualQuery(addr,&mbi,sizeof(mbi))) {
+        return false;
+    };
+    return (mbi.Protect==PAGE_EXECUTE_READ)||(mbi.Protect==PAGE_EXECUTE_READWRITE)||(mbi.Protect==PAGE_READONLY)||(mbi.Protect==PAGE_READWRITE);
+
+}
+
+bool can_write(void* addr) {
+    MEMORY_BASIC_INFORMATION mbi;
+    if (!VirtualQuery(addr,&mbi,sizeof(mbi))) {
+        return false;
+    };
+    return (mbi.Protect==PAGE_EXECUTE_READWRITE)||(mbi.Protect==PAGE_EXECUTE_WRITECOPY)||(mbi.Protect==PAGE_READWRITE)||(mbi.Protect==PAGE_WRITECOPY);
+}
+
+bool can_execute(void* addr) {
+    MEMORY_BASIC_INFORMATION mbi;
+    if (!VirtualQuery(addr,&mbi,sizeof(mbi))) {
+        return false;
+    };
+    return (mbi.Protect==PAGE_EXECUTE_READWRITE)||(mbi.Protect==PAGE_EXECUTE_WRITECOPY)||(mbi.Protect==PAGE_EXECUTE_READ)||(mbi.Protect==PAGE_EXECUTE);
+}
+
+
+string hexdump_s(void *addr, size_t count=0x100,bool compact=false) {
     ostringstream out;
     uintptr_t offset=reinterpret_cast<uintptr_t>(addr);
     for (size_t i = 0; i < count; ++i) {
         unsigned int val = (unsigned int)(((unsigned char *)(offset+i))[0]);
         if ((i % 16) == 0) {
-            out << endl;
-            out << setfill('0') << setw(8) << std::hex << std::uppercase << (offset+i) << ": ";
+            if (!compact) {
+                out << endl;
+                out << setfill('0') << setw(8) << std::hex << std::uppercase << (offset+i) << ": ";
+            }
         }
         out << setfill('0') << setw(2) << std::hex << val << " ";
     }
-    out << endl;
+    if (!compact) {
+        out << endl;
+    }
     return out.str();
 }
 
@@ -258,118 +293,4 @@ vector<string> split(string str, char sep) {
     if (part != "")
         ret.push_back(part);
     return ret;
-}
-
-
-size_t size_ht(HashTable<EntityList> *ht) {
-    size_t cnt = 0;
-    for (size_t i = 0; i < ht->size; ++i) {
-        HashTableEntry<EntityList> *ent = ht->chains[i];
-        if (ent) {
-            while (ent) {
-                ++cnt;
-                ent = ent->next;
-            }
-        }
-    }
-    return cnt;
-}
-
-size_t size_ht(HashTable<Entity> *ht) {
-    size_t cnt = 0;
-    for (size_t i = 0; i < ht->size; ++i) {
-        HashTableEntry<Entity> *ent = ht->chains[i];
-        if (ent) {
-            while (ent) {
-                ++cnt;
-                ent = ent->next;
-            }
-        }
-    }
-    return cnt;
-}
-
-size_t dump_ht(HashTable<EntityList> *ht) {
-    size_t cnt = 0;
-    for (size_t i = 0; i < ht->size; ++i) {
-        HashTableEntry<EntityList> *ent = ht->chains[i];
-        if (ent) {
-            cout << i << ": ";
-            while (ent) {
-                ++cnt;
-                cout << "[ " << ent->name << ": " << ent->data << "]";
-                if (ent->next) {
-                    cout << " -> ";
-                };
-                ent = ent->next;
-            }
-            cout << endl;
-        }
-    }
-    cout << cnt << " Entries" << endl;
-    return cnt;
-}
-
-
-size_t dump_ht(HashTable<Entity> *ht) {
-    size_t cnt = 0;
-    for (size_t i = 0; i < ht->size; ++i) {
-        HashTableEntry<Entity> *ent = ht->chains[i];
-        if (ent) {
-            cout << i << ": ";
-            while (ent) {
-                ++cnt;
-                cout << "[ " << ent->name << ": " << ent->data << "]";
-                if (ent->next) {
-                    cout << " -> ";
-                };
-                ent = ent->next;
-            }
-            cout << endl;
-        }
-    }
-    cout << cnt << " Entries" << endl;
-    return cnt;
-}
-
-size_t dump_ht(HashTable<EntityList> *ht,stringstream *out) {
-    size_t cnt = 0;
-    for (size_t i = 0; i < ht->size; ++i) {
-        HashTableEntry<EntityList> *ent = ht->chains[i];
-        if (ent) {
-            *out << i << ": ";
-            while (ent) {
-                ++cnt;
-                *out << "[ " << ent->name << ": " << ent->data << "]";
-                if (ent->next) {
-                    *out << " -> ";
-                };
-                ent = ent->next;
-            }
-            *out << endl;
-        }
-    }
-    *out << cnt << " Entries" << endl;
-    return cnt;
-}
-
-size_t dump_ht(HashTable<Entity> *ht,stringstream *out) {
-    size_t cnt = 0;
-    for (size_t i = 0; i < ht->size; ++i) {
-        HashTableEntry<Entity> *ent = ht->chains[i];
-        if (ent) {
-            *out << i << ": ";
-            while (ent) {
-                ++cnt;
-                *out << "[ " << ent->name << ": " << ent->data << "]";
-                if (ent->next) {
-                    *out << " -> ";
-                };
-                ent = ent->next;
-            }
-            *out << endl;
-        }
-    }
-    *out << cnt << " Entries" << endl;
-    return cnt;
 }

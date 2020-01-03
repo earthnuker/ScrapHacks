@@ -1,3 +1,12 @@
+## Features
+
+- read and write memory
+- change DirectX state
+- Draw DirectX overlay (still need to make a useful overlay)
+- Dump various data structures to the console
+- Assemble and execute code on the fly
+- Can be controlled via keyboard shortcuts (TODO: allow defining own shortcuts for commands)
+
 ## Prerequisites
 
 - Visual Studio  2017/2019 (others might work)
@@ -13,16 +22,13 @@ cmake -G"NMake Makefiles" -B build
 cmake --build build --target install
 ```
 
-this will generate `ScrapHack.pyd` in `./build`
+This will find the Games's installation folder, verify that the version you have is compatible with ScrapHacks and drop the compiled `.pyd` file into the correct folder to be imported
 
-## Usage
+## Getting started
 
-- create a `lib` folder next to `Scrapland.exe`
-- copy `ScrapHack.pyd` into said folder
 - open the ingame console (Ctrl+^)
 - type `import ScrapHack`
 - type `$help`
-- Done!
 
 ## Notes
 

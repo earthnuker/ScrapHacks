@@ -1,4 +1,8 @@
 #pragma once
+#include "Structures.hpp"
+
+#include <sstream>
+using namespace std;
 
 // OFFSETS
 #define O_MONEY 0x2090
@@ -9,6 +13,7 @@
 
 // POINTERS
 #define P_WORLD 0x7FE944
+#define P_VARS 0x7FBE4C
 #define P_PY_MODS 0x79C698
 
 // FUNCTION ADDRESSES
@@ -22,7 +27,8 @@
 #define P_PyArg_ParseTuple 0x5bb9d0
 
 
-#define MSG_COLOR scrap_RGB(255,128,0)
+#define MSG_COLOR scrap_RGB(128,0,255)
+#define WARN_COLOR scrap_RGB(255,128,0)
 #define ERR_COLOR scrap_RGB(255,0,0)
 #define INFO_COLOR scrap_RGB(0,0,255)
 
@@ -50,4 +56,127 @@ int scrap_log(unsigned int color,const char* msg) {
 
 int scrap_log(uint8_t r,uint8_t g,uint8_t b,const char* msg) {
     return ((t_scrap_log)P_SCRAP_LOG)(scrap_RGB(r,g,b),msg);
+}
+
+
+int scrap_log(unsigned int color,string msg) {
+    return ((t_scrap_log)P_SCRAP_LOG)(color,msg.c_str());
+}
+
+int scrap_log(uint8_t r,uint8_t g,uint8_t b,string msg) {
+    return ((t_scrap_log)P_SCRAP_LOG)(scrap_RGB(r,g,b),msg.c_str());
+}
+
+
+size_t size_ht(HashTable<EntityList> *ht) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < ht->size; ++i) {
+        HashTableEntry<EntityList> *ent = ht->chains[i];
+        if (ent) {
+            while (ent) {
+                ++cnt;
+                ent = ent->next;
+            }
+        }
+    }
+    return cnt;
+}
+
+size_t size_ht(HashTable<Entity> *ht) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < ht->size; ++i) {
+        HashTableEntry<Entity> *ent = ht->chains[i];
+        if (ent) {
+            while (ent) {
+                ++cnt;
+                ent = ent->next;
+            }
+        }
+    }
+    return cnt;
+}
+
+size_t dump_ht(HashTable<EntityList> *ht) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < ht->size; ++i) {
+        HashTableEntry<EntityList> *ent = ht->chains[i];
+        if (ent) {
+            cout << i << ": ";
+            while (ent) {
+                ++cnt;
+                cout << "[ " << ent->name << ": " << ent->data << "]";
+                if (ent->next) {
+                    cout << " -> ";
+                };
+                ent = ent->next;
+            }
+            cout << endl;
+        }
+    }
+    cout << cnt << " Entries" << endl;
+    return cnt;
+}
+
+
+size_t dump_ht(HashTable<Entity> *ht) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < ht->size; ++i) {
+        HashTableEntry<Entity> *ent = ht->chains[i];
+        if (ent) {
+            cout << i << ": ";
+            while (ent) {
+                ++cnt;
+                cout << "[ " << ent->name << ": " << ent->data << "]";
+                if (ent->next) {
+                    cout << " -> ";
+                };
+                ent = ent->next;
+            }
+            cout << endl;
+        }
+    }
+    cout << cnt << " Entries" << endl;
+    return cnt;
+}
+
+size_t dump_ht(HashTable<EntityList> *ht,stringstream *out) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < ht->size; ++i) {
+        HashTableEntry<EntityList> *ent = ht->chains[i];
+        if (ent) {
+            *out << i << ": ";
+            while (ent) {
+                ++cnt;
+                *out << "[ " << ent->name << ": " << ent->data << "]";
+                if (ent->next) {
+                    *out << " -> ";
+                };
+                ent = ent->next;
+            }
+            *out << endl;
+        }
+    }
+    *out << cnt << " Entries" << endl;
+    return cnt;
+}
+
+size_t dump_ht(HashTable<Entity> *ht,stringstream *out) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < ht->size; ++i) {
+        HashTableEntry<Entity> *ent = ht->chains[i];
+        if (ent) {
+            *out << i << ": ";
+            while (ent) {
+                ++cnt;
+                *out << "[ " << ent->name << ": " << ent->data << "]";
+                if (ent->next) {
+                    *out << " -> ";
+                };
+                ent = ent->next;
+            }
+            *out << endl;
+        }
+    }
+    *out << cnt << " Entries" << endl;
+    return cnt;
 }

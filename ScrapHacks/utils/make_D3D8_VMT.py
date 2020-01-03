@@ -2,7 +2,6 @@ import os
 import sys
 import re
 outfile,infile=sys.argv[1:]
-
 re_interface=re.compile(r"^DECLARE_INTERFACE_{0,1}\((.*?)\)$")
 re_method=re.compile(r"^\w*STDMETHOD_{0,1}\((.*?)\)\((.*?)\).*;")
 name=None
@@ -22,7 +21,6 @@ with open(infile,"r") as infh:
             meth_name=meth_name.split(",")[-1].strip()
             VMTs[name][meth_name]=idx
             idx+=1
-print(f"Generating: {outfile} from {infile} ...")
 with open(outfile,"w") as ofh:
     for name in sorted(VMTs.keys()):
         print(f"namespace {name} {{",file=ofh)

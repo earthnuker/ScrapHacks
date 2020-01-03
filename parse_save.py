@@ -1,3 +1,4 @@
+import sys
 from construct import *
 from pprint import pprint
 
@@ -11,10 +12,10 @@ ScrapSave = "ScarpSaveGame" / Struct(
     "data" / PrefixedArray(Int32ul, ScrapSaveVar),
     Terminated,
 )
-with open("Save0.sav", "rb") as sav_file:
+with open(sys.argv[1], "rb") as sav_file:
     save = ScrapSave.parse_stream(sav_file)
     print("ID:", save.id)
     print("Title:", save.title)
     for var in save.data:
-        print(" - {}: {}".format(var.name, var.data))
+        print("   {}: {}".format(var.name, var.data))
 
