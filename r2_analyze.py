@@ -101,7 +101,7 @@ for addr, name in config.functions.items():
     x64_dbg_label(addr,name,"fcn")
     r2_cmd(f"afr fcn.{name} {hex(addr)}")
 
-for addr,sig in config.function_signatures:
+for addr,sig in config.function_signatures.items():
     r2_cmd(f'"afs {config.function_signatures[addr]}" @{hex(addr)}')
 
 
