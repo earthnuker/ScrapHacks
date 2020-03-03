@@ -1,4 +1,4 @@
-# Scrapland Reverse Engineering noted and tools
+# Scrapland Reverse Engineering notes and tools
 
 ## Scripts:
 * `parse_save.py`: Dumps information extracted from Save file
