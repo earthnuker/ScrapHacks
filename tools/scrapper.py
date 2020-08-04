@@ -3,18 +3,29 @@ from collections import OrderedDict
 import glob
 import os
 import shutil
-from construct import *
+from construct import (
+    Struct,
+    PascalString,
+    Int32ul,
+    Lazy,
+    Pointer,
+    Bytes,
+    this,
+    PrefixedArray,
+    Const,
+    Debugger
+)
 from tqdm import tqdm
 
-setglobalstringencoding(None)
-
 ScrapFile = Struct(
-    "path" / PascalString(Int32ul),
+    "path" / PascalString(Int32ul, encoding="ascii"),
     "size" / Int32ul,
     "offset" / Int32ul,
-    "data" / OnDemandPointer(this.offset, Bytes(this.size)),
+    "data" / Lazy(Pointer(this.offset, Bytes(this.size))),
 )
-DummyFile = Struct("path" / PascalString(Int32ul), "size" / Int32ul, "offset" / Int32ul)
+DummyFile = Struct(
+    "path" / PascalString(Int32ul, encoding="u8"), "size" / Int32ul, "offset" / Int32ul
+)
 
 PackedHeader = Struct(
     Const(b"BFPK"), Const(b"\0\0\0\0"), "files" / PrefixedArray(Int32ul, ScrapFile)

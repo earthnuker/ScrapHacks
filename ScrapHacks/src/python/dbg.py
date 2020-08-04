@@ -5,10 +5,12 @@ import MissionsFuncs
 import SScorer
 import Menu
 import sys
+
 QC = quickconsole
 MF = MissionsFuncs
 last_frame = None
-
+level = 3
+initialized = 0
 sys.path.append(".\\pylib\\Lib")
 sys.path.append(".\\pylib\\Libs")
 sys.path.append(".\\pylib")
@@ -16,11 +18,18 @@ sys.path.append(".\\pylib")
 
 def reload():
     sys.settrace(None)
-    sys.modules['__builtin__'].reload(sys.modules['dbg'])
+    sys.modules['__builtin__'].reload(sys.modules[__name__])
 
 
 def dgb_info():
-    SScorer.SetLabelText(`last_frame`, Scrap.GetTime() + 0.1)
+    if me:
+        try:
+            dbg_text = str(SVec.Mod(me.Vel))
+        except:
+            dbg_text=""
+    else:
+        dbg_text = ""
+    SScorer.SetLabelText(dbg_text, Scrap.GetTime() + 0.1)
     Scrap.DeleteScheduledFuncs("dbg.dbg_info")
     Scrap.DeleteScheduledFuncs("dbg.dbg_info")
     Scrap.AddScheduledFunc(Scrap.GetTime()+0.1, dgb_info, (), "dbg.dbg_info")
@@ -197,12 +206,11 @@ def helplib():
     logfile_name = None
     print "Done!"
 
-
 def enable_all_conv():
     try:
         import CharConversor
     except ImportError:
-        print("CharConversor not available")
+        # print("CharConversor not available")
         return
     CharConversor.ConversionChars = list(CharConversor.ConversionChars)
     E = Scrap.GetFirst()
@@ -239,20 +247,6 @@ def nuke():
         try:
             E.Life = 0
             E.Invulnerable = 0
-        except:
-            pass
-        E = Scrap.GetEntity(E.NextInSlot)
-
-
-def test_func():
-    E = Scrap.GetFirst()
-    me = Scrap.UsrEntity(0)
-    while E:
-        if E.Name == me.Name:
-            E = Scrap.GetEntity(E.NextInSlot)
-        try:
-            E.Money=1024*1024*1024
-            # SAI.SetStateVehicle(8,me.Name,E.Name)
         except:
             pass
         E = Scrap.GetEntity(E.NextInSlot)
@@ -299,7 +293,7 @@ def getall():
     me = Scrap.UsrEntity(0)
     while E:
         try:
-            E.Pos = me.Pos
+            E.Descriptor = "HAXX!"
         except:
             pass
         E = Scrap.GetEntity(E.NextInSlot)
@@ -308,6 +302,11 @@ def getall():
 def god(e=None):
     if e == None:
         e = Scrap.UsrEntity(0)
+        if e:
+            try:
+                e.IsType("Car")
+            except:
+                return
     if e:
         if e.IsType("Car"):
             e.Ammo00 = SWeap.GetFAmmo(0, "Max")
@@ -324,9 +323,18 @@ def god(e=None):
         elif e.IsType("WalkChar"):
             e.Energy = 1
         e.Invulnerable = 1
+        e.TimeSpeed = 2.0
+        e.Mass = 100
+    # Scrap.SetAlarm(0.0)
+    Scrap.SetAlarmGrow(-0.5)
     Scrap.DeleteScheduledFuncs("dbg.god")
     Scrap.DeleteScheduledFuncs("dbg.god")
-    Scrap.AddScheduledFunc(Scrap.GetTime(), god, (e,), "dbg.god")
+    Scrap.AddScheduledFunc(Scrap.GetTime() + 0.01, god, (e,), "dbg.god")
+
+
+def ungod():
+    for _ in range(1024):
+        Scrap.DeleteScheduledFuncs("dbg.god")
 
 
 def ultranuke():
@@ -337,9 +345,90 @@ def ultranuke():
                            (), "dbg.ultranuke")
 
 
+def freeze(_=None):
+    QC.freeze()
+    Scrap.DeleteScheduledFuncs("dbg.freeze")
+    Scrap.DeleteScheduledFuncs("dbg.freeze")
+    Scrap.AddScheduledFunc(Scrap.GetTime()+0.1, freeze, (None,), "dbg.freeze")
+
+
+def unfreeze(_):
+    Scrap.DeleteScheduledFuncs("dbg.freeze")
+    Scrap.DeleteScheduledFuncs("dbg.freeze")
+    QC.unfreeze()
+
+
 def brake():
     if me:
         me.Vel = (0, 0, 0)
+
+
+weaps_hacked = {
+    "Laser": {
+        "AmmoCost": 0,
+        "TimeDelay": 0,
+    },
+    "Vulcan": {
+        "TimeDelay": 0.01,
+        "TimeDelayUPG": 0.01,
+        "AmmoCost": 0
+    },
+    "Devastator": {
+        "AmmoCost": 0,
+        "RechargeTime": 0,
+        "SpreadAngle": 0,
+    },
+    "Tesla": {
+        "AmmoCost": 0,
+    },
+    "ATPC": {
+        "AmmoCost": 0,
+        "UpgradeDelay": 0,
+        "Delay": 0,
+    },
+    "Swarm": {
+        "AmmoCost1": 0,
+        "AmmoCost2": 0,
+        "AmmoCost3": 0,
+        "AmmoCost4": 0,
+        "Number1": 20,
+        "Number2": 20,
+        "Number3": 20,
+        "Number4": 20,
+        "TurnSpeed": 360000,
+        "TurnSpeedUPG": 360000,
+        "TimeDelay": 1.0,
+    },
+    "Inferno": {
+        "AmmoCost": 1
+    }
+}
+
+
+def weaphacks():
+    for weapon, properties in weaps_hacked.items():
+        for prop, value in properties.items():
+            Scrap.Set(weapon+prop, value)
+
+
+def unweaphacks():
+    for weapon, properties in weaps_hacked.items():
+        for prop, value in properties.items():
+            Scrap.Set(weapon+prop, Scrap.Def(weapon+prop))
+
+
+def test_func():
+    E = Scrap.GetFirst()
+    me = Scrap.UsrEntity(0)
+    while E:
+        if E.Name == me.Name:
+            E = Scrap.GetEntity(E.NextInSlot)
+        try:
+            E.Money = 1024*1024*1024
+            # SAI.SetStateVehicle(8,me.Name,E.Name)
+        except:
+            pass
+        E = Scrap.GetEntity(E.NextInSlot)
 
 
 for _ in range(1024):
@@ -354,18 +443,31 @@ for module in sys.builtin_module_names:
     exec("import " + module)
 
 sys.settrace(None)
-
-me = Scrap.UsrEntity(0)
 notrace()
 helplib()
 # settrace()
-dgb_info()
-enable_all_conv()
-god()
-Scrap.Set("debug", 3)
-Scrap.Set("ShowConsoleLog", 1)
-Scrap.Set("AlwaysFlushLog", 1)
-Scrap.Set("PythonExecute", "import dbg")
-exec("import QuickConsole;QuickConsole.debug=sys.modules['dbg']")
 
-print "Debug Module loaded"
+
+def init():
+    global me
+    global initialized
+    if initialized == 0:
+        from ScrapHack import Mem, asm
+        sys.modules[__name__].mem = Mem
+        sys.modules[__name__].asm = asm
+        me = Scrap.UsrEntity(0)
+    dgb_info()
+    enable_all_conv()
+    god()
+    Scrap.Set("debug", level)
+    Scrap.Set("ShowConsoleLog", 1)
+    Scrap.Set("AlwaysFlushLog", 1)
+    Scrap.Set("PythonExecute", "import dbg;dbg.init()")
+    Scrap.DeleteScheduledFuncs("dbg_init")
+    Scrap.DeleteScheduledFuncs("dbg_init")
+    Scrap.AddScheduledFunc(Scrap.GetTime()+1, init, (), "dbg_init")
+    initialized = 1
+
+
+exec("import QuickConsole;QuickConsole.dbg=sys.modules['dbg']")
+print "Debug Module loaded use /dbg.init to initialize"

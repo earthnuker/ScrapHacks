@@ -78,5 +78,11 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp"
-    }
+    },
+    "cmake.generator": "NMake Makefiles",
+    "cmake.preferredGenerators": [
+        "NMake Makefiles",
+        "Ninja",
+        "Unix Makefiles"
+    ]
 }

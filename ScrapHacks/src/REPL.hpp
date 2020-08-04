@@ -10,6 +10,7 @@
 #include <string>
 
 #include <asmtk/asmtk.h>
+#include <Zydis/Zydis.h>
 #include "Scrapland.hpp"
 #include "Util.hpp"
 
@@ -40,17 +41,20 @@ size_t assemble(vector<string> assembly,uint64_t base) {
     for (string line:assembly) {
         if (err = p.parse((line+"\n").c_str())) {
             snprintf(err_msg,1024,"PARSE ERROR: [%s] %08x (%s)\n",line.c_str(), err, DebugUtils::errorAsString(err));
+            cerr<<err_msg<<endl;
             scrap_log(ERR_COLOR,err_msg);
             return 0;
         }
     }
     if (err=code.flatten()) {
         snprintf(err_msg,1024,"FLATTEN ERROR: %08x (%s)\n", err, DebugUtils::errorAsString(err));
+        cerr<<err_msg<<endl;
         scrap_log(ERR_COLOR,err_msg);
         return 0;
     }
     if (err=code.resolveUnresolvedLinks()) {
         snprintf(err_msg,1024,"RESOLVE ERROR: %08x (%s)\n", err, DebugUtils::errorAsString(err));
+        cerr<<err_msg<<endl;
         scrap_log(ERR_COLOR,err_msg);
         return 0;
     }
@@ -63,6 +67,7 @@ size_t assemble(vector<string> assembly,uint64_t base) {
     MEMORY_BASIC_INFORMATION mbi;
     
     if (VirtualQuery((void*)base, &mbi, sizeof(mbi)) == 0) {
+        cerr<<"ERROR: "<< GetLastErrorAsString() <<endl;
         scrap_log(ERR_COLOR, "ERROR: ");
         scrap_log(ERR_COLOR, GetLastErrorAsString());
         scrap_log(ERR_COLOR, "\n");
@@ -70,11 +75,13 @@ size_t assemble(vector<string> assembly,uint64_t base) {
     };
     if (!VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE, &mbi.Protect))
     {
+        cerr<<"ERROR: "<< GetLastErrorAsString() <<endl;
         scrap_log(ERR_COLOR, "ERROR: ");
         scrap_log(ERR_COLOR, GetLastErrorAsString());
         scrap_log(ERR_COLOR, "\n");
         return 0;
     };
+    cout<<"CODE: "<< hexdump_s((void*)base,buffer.size()) << endl;
     memcpy((void*)base,buffer.data(),buffer.size());
     scrap_log(INFO_COLOR,"Code:"+hexdump_s((void*)base,buffer.size()));
     VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
@@ -85,7 +92,38 @@ size_t asm_size(vector<string> assembly) {
     return assemble(assembly,0);
 }
 
+string disassemble(void* addr, size_t num,bool compact) {
+    stringstream ret;
+    ZyanU64 z_addr = reinterpret_cast<uintptr_t>(addr);
+    ZydisDecoder decoder;
+    ZydisFormatter formatter;
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_COMPAT_32, ZYDIS_ADDRESS_WIDTH_32);
+    ZydisFormatterInit(&formatter, ZYDIS_FORMATTER_STYLE_INTEL);
+    
+    ZydisDecodedInstruction instruction;
+    while (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, addr, -1, &instruction)))
+    {
+        char buffer[256];
+        ZydisFormatterFormatInstruction(&formatter, &instruction, buffer, sizeof(buffer), z_addr);
+        if (!compact) {
+            ret<< "[" << std::hex << setfill('0') << setw(8) << z_addr << "]: ";
+        }
 
+        ret << buffer;
+        
+        if (compact) {
+            ret<<"; ";
+        } else {
+            ret<<endl;
+        }
+        addr = reinterpret_cast<void*>(z_addr += instruction.length);
+        num--;
+        if (num==0) {
+            break;
+        }
+    }
+    return ret.str();
+}
 
 struct Command {
     t_cmd_func func;
@@ -217,6 +255,46 @@ get_protection(void *addr) {
     return mbi.Protect;
 }
 
+void cmd_disassemble(Command* cmd, vector<string> args) {
+    MEMORY_BASIC_INFORMATION mbi;
+    if (args.size()<1) {
+        scrap_log(ERR_COLOR, cmd->usage);
+        scrap_log(ERR_COLOR, "\n");
+        return;
+    }
+    uintptr_t addr = UINTPTR_MAX;
+    size_t size = 0xff;
+    try {
+        addr = stoull(args[0], 0, 16);
+        if (args.size()>1) {
+            size = stoull(args[1]);
+        }
+    } catch (exception e) {
+        scrap_log(ERR_COLOR, "ERROR: ");
+        scrap_log(ERR_COLOR, e.what());
+        scrap_log(ERR_COLOR, "\n");
+        return;
+    }
+    void *mptr = reinterpret_cast<void *>(addr);
+    if (VirtualQuery(mptr, &mbi, sizeof(mbi)) == 0) {
+        scrap_log(ERR_COLOR, "ERROR: ");
+        scrap_log(ERR_COLOR, GetLastErrorAsString());
+        scrap_log(ERR_COLOR, "\n");
+        return;
+    };
+    if (!VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE,
+                   &mbi.Protect)) {
+        scrap_log(ERR_COLOR, "ERROR: ");
+        scrap_log(ERR_COLOR, GetLastErrorAsString());
+        scrap_log(ERR_COLOR, "\n");
+        return;
+    };
+    string dasm = disassemble(mptr, size, false);
+    scrap_log(INFO_COLOR, dasm);
+    VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
+    return;
+}
+
 void cmd_exec(Command* cmd, vector<string> args) {
     void *addr;
     MEMORY_BASIC_INFORMATION mbi;
@@ -339,7 +417,7 @@ void cmd_read(Command* cmd,vector<string> args) {
         return;
     };
     string hxd = hexdump_s(mptr, size);
-    scrap_log(INFO_COLOR, hxd.c_str());
+    scrap_log(INFO_COLOR, hxd);
     VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
     if (buffer) {
         free(buffer);
@@ -399,22 +477,26 @@ void cmd_dx8(Command* cmd,vector<string> args) {
 }
 
 void cmd_dump_stack(Command* cmd, vector<string> args) {
+    stringstream ret;
     void** stack=(void**)_AddressOfReturnAddress();
     cout<<"ESP:    "<<stack<<endl;
     for (size_t n=0;n<0x100;++n) {
         if (!addr_exists(stack[n])) {
             continue;
         }
-        char R=can_read(stack[n]) ? 'R' : ' ';
-        char W=can_write(stack[n]) ? 'W' : ' ';
-        char X=can_execute(stack[n]) ? 'X' : ' ';
-        cout<<"ESP[" << std::hex << setfill('0') << setw(2) << n <<"]: "<<stack[n]<<" "<<R<<W<<X;
-        if (can_read(stack[n])) {
-            cout<<" [ "<<hexdump_s(stack[n],0xf,true)<<"]"<<endl;
-        } else {
-            cout<<endl;
+        bool r,w,x;
+        char R=(r=can_read(stack[n])) ? 'R' : ' ';
+        char W=(w=can_write(stack[n])) ? 'W' : ' ';
+        char X=(x=can_execute(stack[n])) ? 'X' : ' ';
+        ret<< std::hex << setfill('0') << setw(8) << stack+(n*sizeof(void*)) << ": "<<stack[n]<<" "<<R<<W<<X;
+        if (r && !x) {
+            ret<<" [ "<<hexdump_s(stack[n],0xf,true)<<"]";
+        } else if (r && x) {
+            ret<<" [ "<<disassemble(stack[n],5,true)<<"]";
         }
+        ret<<endl;
     }
+    scrap_log(INFO_COLOR,ret.str());
     return;
 }
 
@@ -426,7 +508,7 @@ void cmd_dump_py(Command* cmd,vector<string> args) {
                     << meth.second->ml_meth << endl;
         }
     }
-    scrap_log(INFO_COLOR,out.str().c_str());
+    scrap_log(INFO_COLOR,out.str());
 }
 
 void cmd_dump_vars(Command* cmd, vector<string> args) {
@@ -437,7 +519,7 @@ void cmd_dump_vars(Command* cmd, vector<string> args) {
         out<<var->name<< "[" <<std::hex <<(uint16_t)var->type <<","<< (uint16_t)var->subtype << std::dec << "]: " << var->desc<<" ("<<var->value<<", "<<var->default<<")"<<endl;
         var=var->next;
     }
-    scrap_log(INFO_COLOR,out.str().c_str());
+    scrap_log(INFO_COLOR,out.str());
 }
 
 void cmd_dump_ents(Command* cmd,vector<string> args) {
@@ -446,7 +528,7 @@ void cmd_dump_ents(Command* cmd,vector<string> args) {
     dump_ht(ptr<HashTable<Entity>>(P_WORLD, O_ENTS), &out);
     out << "Entity Lists:" << endl;
     dump_ht(ptr<HashTable<EntityList>>(P_WORLD, O_ENTLISTS), &out);
-    scrap_log(INFO_COLOR,out.str().c_str());
+    scrap_log(INFO_COLOR,out.str());
     return;
 }
 
@@ -478,10 +560,14 @@ void cmd_disable_overlay(Command* cmd,vector<string> args) {
 
 void cmd_print_alarm(Command* cmd,vector<string> args) {
     stringstream out;
-    float *alarm = ptr<float>(P_WORLD, O_ALARM);
-    float *alarm_grow = ptr<float>(P_WORLD, O_ALARM_GROW);
-    out << "Alarm: " << alarm[0] << " + " << alarm_grow[0] << endl;
-    scrap_log(INFO_COLOR,out.str().c_str());
+    float alarm = ptr<float>(P_WORLD, O_ALARM)[0];
+    float alarm_grow = ptr<float>(P_WORLD, O_ALARM_GROW)[0];
+    if (alarm_grow<0) {
+        out << "Alarm: " << alarm << " - " << alarm_grow << endl;
+    } else {
+        out << "Alarm: " << alarm << " + " << alarm_grow << endl;
+    }
+    scrap_log(INFO_COLOR,out.str());
     return;
 }
 
@@ -528,6 +614,7 @@ void cmd_asm(Command* cmd, vector<string> args) {
     assemble(split(code,';'),buffer_addr);
 }
 
+
 void cmd_help(Command* cmd,vector<string> args);
 
 static REPL* repl=new REPL(
@@ -538,6 +625,7 @@ static REPL* repl=new REPL(
         {"exec",new Command(cmd_exec,"Usage: $exec <addr>","Start a new thread at the specified address")},
         {"asm",new Command(cmd_asm,"Usage: $asm [addr] <inst1>;<inst2>;...","Assemble instructions at address, if no address is given allocate memory and assemble code into that")},
         {"stack",new Command(cmd_dump_stack,"Usage: $mem stack","Dump stack contents")},
+        {"dasm",new Command(cmd_disassemble,"Usage: $mem dasm <addr> [num_inst]","Disassemble memory at address")},
     })},
     {"unload",new Command(cmd_unload,"Usage: $unload","Unload ScrapHacks")},
     {"dx8",new Command(cmd_dx8,"Usage: $dx8 <subcommand>","Manipulate DirectX 8 functions and state",{

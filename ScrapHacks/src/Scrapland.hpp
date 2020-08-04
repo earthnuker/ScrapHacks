@@ -1,6 +1,6 @@
 #pragma once
 #include "Structures.hpp"
-
+#include "Util.hpp"
 #include <sstream>
 using namespace std;
 
@@ -17,14 +17,21 @@ using namespace std;
 #define P_PY_MODS 0x79C698
 
 // FUNCTION ADDRESSES
+// ENGINE INTERNALS
 #define P_CON_HANDLER 0x402190
 #define P_SCRAP_LOG 0x4134C0
 #define P_SCRAP_EXEC 0x5a8390
 #define P_SCRAP_EXIT 0x4010c0
 #define P_D3DCHECK 0x602a70
 #define P_D3DDEV 0x852914
+// PYTHON FUNCTIONS
 #define P_Py_InitModule 0x5A8FB0
 #define P_PyArg_ParseTuple 0x5bb9d0
+#define P_PyBuildValue 0x5a90f0
+#define P_PyList_New 0x5b3120
+#define P_PyTuple_New 0x5b91a0
+#define P_PyList_SetItem 0x5b3240
+#define P_PyTuple_SetItem 0x5b92a0
 
 
 #define MSG_COLOR scrap_RGB(128,0,255)
@@ -41,14 +48,20 @@ uint32_t scrap_RGB(uint8_t r,uint8_t g,uint8_t b) {
 typedef int(_cdecl *t_scrap_log)(unsigned int color, const char *message);
 typedef int(_cdecl *t_scrap_exec)(const char *code);
 typedef int(_cdecl *t_PyArg_ParseTuple)(void *PyObj, char *format, ...);
+typedef void*(_cdecl *t_Py_BuildValue)(char *format, ...);
 typedef int(_cdecl *t_Py_InitModule)(const char *name, void *methods,
                                      const char *doc, void *passthrough,
                                      int module_api_version);
+typedef void*(_cdecl *t_PyList_New)(char *format, ...);
+typedef void*(_cdecl *t_PyTuple_New)(char *format, ...);
+typedef void*(_cdecl *t_PyList_SetItem)(char *format, ...);
+typedef void*(_cdecl *t_PyList_SetItem)(char *format, ...);
 
 // GLOBAL FUNCTIONS
 auto scrap_exec = (t_scrap_exec)P_SCRAP_EXEC;
-auto pyarg_parsetuple = (t_PyArg_ParseTuple)P_PyArg_ParseTuple;
-auto py_initmodule = (t_Py_InitModule)P_Py_InitModule;
+auto PyArg_ParseTuple = (t_PyArg_ParseTuple)P_PyArg_ParseTuple;
+auto Py_BuildValue = (t_Py_BuildValue)P_PyBuildValue;
+auto Py_InitModule = (t_Py_InitModule)P_Py_InitModule;
 
 int scrap_log(unsigned int color,const char* msg) {
     return ((t_scrap_log)P_SCRAP_LOG)(color,msg);
@@ -58,7 +71,6 @@ int scrap_log(uint8_t r,uint8_t g,uint8_t b,const char* msg) {
     return ((t_scrap_log)P_SCRAP_LOG)(scrap_RGB(r,g,b),msg);
 }
 
-
 int scrap_log(unsigned int color,string msg) {
     return ((t_scrap_log)P_SCRAP_LOG)(color,msg.c_str());
 }
@@ -67,6 +79,12 @@ int scrap_log(uint8_t r,uint8_t g,uint8_t b,string msg) {
     return ((t_scrap_log)P_SCRAP_LOG)(scrap_RGB(r,g,b),msg.c_str());
 }
 
+int scrap_err() {
+    string err("Error: ");
+    err+=GetLastErrorAsString();
+    err+="\n";
+    return scrap_log(ERR_COLOR,err);
+}
 
 size_t size_ht(HashTable<EntityList> *ht) {
     size_t cnt = 0;

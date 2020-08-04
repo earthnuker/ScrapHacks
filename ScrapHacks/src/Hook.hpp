@@ -9,9 +9,10 @@
 
 using namespace std;
 
-/*
+
 vector<uint8_t> make_trampoline(uintptr_t orig,uintptr_t hook) {
     using namespace asmjit;
+    vector<uint8_t> ret;
     JitRuntime rt;
     CodeHolder code;
     CodeInfo ci=rt.codeInfo();
@@ -23,9 +24,15 @@ vector<uint8_t> make_trampoline(uintptr_t orig,uintptr_t hook) {
     code.resolveUnresolvedLinks();
     code.relocateToBase(orig);
     size_t code_size=code.sectionById(0)->buffer().size();
-    code.copyFlattenedData((void*)orig, code_size, CodeHolder::kCopyWithPadding);
+    uint8_t* buffer=new uint8_t[code_size];
+    code.copyFlattenedData((void*)buffer, code_size, CodeHolder::kCopyWithPadding);
+    for (size_t i=0;i<code_size;++i) {
+        ret.push_back(buffer[i]);
+    }
+    delete buffer;
+    return ret;
 }
-*/
+
 
 class Hook {
   private:
@@ -33,35 +40,43 @@ class Hook {
     void *orig;
     void *detour;
     bool enabled;
-    uint8_t orig_bytes[6];
-    uint8_t jmp_bytes[6];
+    uint8_t *orig_bytes;
+    uint8_t *jmp_bytes;
+    size_t size;
     static map<uintptr_t, shared_ptr<Hook>> hooks;
 
   public:
     Hook(void *func, void *detour) {
-        // TODO: build jmp_bytes using asmjit
         uintptr_t dest = reinterpret_cast<uintptr_t>(detour);
         uintptr_t src = reinterpret_cast<uintptr_t>(func);
         this->orig = func;
         this->detour = detour;
-        this->jmp_bytes[0] = 0x68; // push
-        this->jmp_bytes[1] = (dest >> 0) & 0xff;
-        this->jmp_bytes[2] = (dest >> 8) & 0xff;
-        this->jmp_bytes[3] = (dest >> 16) & 0xff;
-        this->jmp_bytes[4] = (dest >> 24) & 0xff;
-        this->jmp_bytes[5] = 0xC3; // ret
-        VirtualQuery(func, &mbi, sizeof(mbi));
+        vector<uint8_t> code = make_trampoline(src,dest);
+        this->orig_bytes = new uint8_t[code.size()];
+        this->jmp_bytes = new uint8_t[code.size()];
+        this->size = code.size();
+        this->enabled = false;
+        uint8_t* func_b = reinterpret_cast<uint8_t*>(this->orig);
+        for (size_t i=0;i<this->size;++i) {
+            this->orig_bytes[i]=func_b[i];
+            this->jmp_bytes[i]=code[i];
+        }
+        VirtualQuery(this->orig, &mbi, sizeof(mbi));
         VirtualProtect(mbi.BaseAddress, mbi.RegionSize, PAGE_EXECUTE_READWRITE,
                        &mbi.Protect);
-        memcpy(this->orig_bytes, this->orig, 1 + 4 + 1);
         VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
-        this->enabled = false;
+        cout<<"Constructed hook from "<<func<<" to "<<detour<<", size: " << this->size<<endl;
     }
 
     ~Hook() {
         cout << "Unhooking: [" << this->orig << " <- " << this->detour << "]"
              << endl;
         this->disable();
+    }
+
+
+    static void addr(uintptr_t _addr, void *detour) {
+        Hook::addr(reinterpret_cast<void*>(_addr),detour);
     }
 
     static void addr(void *addr, void *detour) {
@@ -105,23 +120,23 @@ class Hook {
 
     void disable() {
         if (this->enabled) {
-            // cout << "Disabling: [" << this->orig << " <- " << this->detour <<
-            // "]"
-            // << endl;
+            cout << "Disabling: [" << this->orig << " <- " << this->detour <<
+            "]"
+            << endl;
             VirtualProtect(mbi.BaseAddress, mbi.RegionSize,
                            PAGE_EXECUTE_READWRITE, NULL);
-            memcpy(this->orig, this->orig_bytes, 1 + 4 + 1);
+            memcpy(this->orig, this->orig_bytes, this->size);
             VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
             this->enabled = false;
         }
     }
     void enable() {
         if (!this->enabled) {
-            // cout << "Enabling: [" << this->orig << " -> " << this->detour <<
-            // "]" << endl;
+            cout << "Enabling: [" << this->orig << " -> " << this->detour <<
+            "]" << endl;
             VirtualProtect(mbi.BaseAddress, mbi.RegionSize,
                            PAGE_EXECUTE_READWRITE, NULL);
-            memcpy(this->orig, this->jmp_bytes, 1 + 4 + 1);
+            memcpy(this->orig, this->jmp_bytes, this->size);
             VirtualProtect(mbi.BaseAddress, mbi.RegionSize, mbi.Protect, NULL);
             this->enabled = true;
         }

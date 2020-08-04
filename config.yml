@@ -1,15 +1,26 @@
 notes: |
   0x7faa4c: temp storage?
-  0x7d2094: some reference count
+  0x4039b0: fcn.handle_cli_opts?
+  0x668007: ?
 
 comments:
   0x6113f9: Check if Window exists
 
 flags:
+  0x7fbfa0: P_HT_SaveVars
+  0x7fbe50: P_HT_Eng_Vars
+  0x8c8d60: P_Addr_master
+  0x8c8d50: P_Addr_client
+  0x7fa748: P_Socket
+  0x8045dc: P_Socket_Server
   0x7FE944: P_World
+  0x792618: P_Eng3d_ver
+  0x853a24: P_gWorld
   0x7FBE4C: P_Vars
   0x79C698: Py_Mods
   0x852914: P_D3D8_Dev
+  0x850258: P_D3D8_ZBuffer
+  0x850408: P_D3D8_BackBuffer
   0x7FCC00: N_Paks_opened
   0x7fcbec: Hash_Index_Size
   0x7fcbf0: P_Hash_Index
@@ -36,7 +47,27 @@ flags:
   0x7fadd8: is_python
   0x7fc084: pak_lock
   0x7fbe7c: current_language
-  0x7d2094: py_refcnt_unk
+  0x7d2094: refcnt_Py_None
+  0x7fa830: P_Window
+  0x7fadd0: P_PyExecute
+  0x84d3ec: Py_Initialized
+  0x8c8f10: Py_Debug
+  0x84d3e8: Py_Verbose
+  0x84db38: Py_Optimize
+  0x84dd60: Py_interpr
+  0x7fae38: Debug_Level
+  0x7fae40: Console_Out_Buffer_132_23
+  0x7fbe20: Console_Curr_Line
+  0x84db30: Py_Dummy
+  0x8ca2c4: cmdline
+  0x8c6350: module_filename
+  0x8c6140: P_module_filename
+  0x853954: P_D3DApp
+  0x853091: N_Uniones
+  
+  # 0x7fbe24:
+  # 0x7fa778:
+  # 0x8c8d78: 
 
 VMTs:
   0x78d4d8: Py_entity
@@ -56,133 +87,309 @@ VMTs:
   0x7933ac: 3d_Gfx
   0x7933a0: NodeFX
 
+classes:
+  World: 
+
 types:
-  - "struct PyMethodDef { char *ml_name; void *ml_meth; int ml_flags; char *ml_doc;};"
+  - "struct PyMethodDef { char* ml_name; void* ml_meth; int ml_flags; char* ml_doc;};"
   - "struct GameVar { struct GameVar* next; const char* name; const char* desc; uint64_t d_type; void* value; void* def_value; };"
   - "struct HT_Entry { void* data; const char* key; struct HT_Entry* next;};"
   - "struct PakEntry { unsigned char* filename; bool locked; void* data; uint32_t seek;};"
   - "struct HashIndexEntry { uint32_t offset; uint32_t size; uint32_t status; const char* name; struct HashIndexEntry* next; };"
   - "struct HashIndex { uint32_t size; struct HashIndexEntry** data; };"
-  - "struct HashTableEntry { void* data; const char *key; struct HashTableEntry* next; };"
+  - "struct HashTableEntry { void* data; const char* key; struct HashTableEntry* next; };"
   - "struct HashTable { uint32_t size; struct HashTableEntry** data; };"
-
-function_signatures:
-  0x5A8390: "int PyRun_SimpleString(const char* command);"
-  0x5BB9D0: "int PyArg_ParseTuple(void* PyObj, char* format, ...);"
-  0x413ee0: "int dbg_log(const char* fmt,...);"
-  0x4134C0: "int write_log(unsigned int color, const char* msg);"
-  0x47C1E0: "int ht_hash_ent_list(const char* str);"
-  0x404BB0: "int ht_hash_ent(const char* str);"
-  0x4016F0: "int reg_get_val(const char* value);"
-  0x414280: "int prepare_html_log(const char* filename);"
-  0x6597d0: "bool read_ini_entry(void* dest,const char* key, const char* section);"
-  0x5A8FB0: "void* Py_InitModule(const char* name,void* methods);"
-  0x5E3800: "int fopen_from_pak(const char* filename);"
-  0x419950: "int fopen_2(const char* filename);"
-  0x41AB50: "int open_pak(const char* filename, int unk_1,void* unk_ptr);"
-  0x404460: "int register_c_callback(const char* name,void* func);"
-  0x414070: "void throw_assertion_2(const char* check,const char* file,const char* date, unsigned int line);"
-  0x5FBC50: "void throw_assertion_1(const char* check,const char* file, unsigned int line);"
-  0x5BC140: "static char* convertsimple1(void *arg, char **p_format, void *p_va);"
-  0x5E3800: "int32_t fopen_from_pak(const char* filename,const char* mode);"
-  0x5a90f0: "void* Py_BuildValue(const char* format, ...);"
-  0x5B9E70: "void* PyObject_GetAttrString(void* obj, const char* attr);"
-
+  - "struct va_list { unsigned int gp_offset; unsigned int fp_offset; void *overflow_arg_area; void *reg_save_area; };"
 functions:
-  0x6B1C70: strcmp
-  0x5BB9D0: PyArg_ParseTuple
-  0x5DD510: init_engine_3d
-  0x401180: create_window
-  0x401240: create_main_window
-  0x4016F0: reg_get_val
-  0x4134C0: write_log
-  0x414280: prepare_html_log
-  0x418220: get_version_info
-  0x4137E0: write_html_log
-  0x402190: handle_console_input
-  0x5F9520: handle_render_console_input
-  0x404A50: find_entity
-  0x47C1E0: ht_hash_ent_list
-  0x404BB0: ht_hash_ent
-  0x404460: register_c_callback
-  0x417470: load_game
-  0x5E3800: fopen_from_pak
-  0x5e3500: fopen
-  0x403370: init_debug
-  0x401770: init
-  0x4026D0: init_py
-  0x405B40: init_py_sub
-  0x5A8FB0: Py_InitModule
-  0x41AB50: open_pak
-  0x5A8390: PyRun_SimpleString
-  0x414570: setup_game_vars
-  0x5FBC50: throw_assertion_1
-  0x414070: throw_assertion_2
-  0x5F7000: read_ini
-  0x650F80: load_sm3
-  0x6665A0: load_m3d_1
-  0x666900: load_m3d_2
-  0x479B20: world_constructor
-  0x479B40: init_world
-  0x402510: deinit_world
-  0x479870: make_world
-  0x602A70: render_frame
-  0x6B738C: handle_exception
-  0x5B9E70: PyObject_GetAttrString
-  0x413ee0: dbg_log
-  0x5f75e0: init_d3d
-  0x63a2f0: gdi_draw_line
-  0x5e3250: read_stream
-  0x5e3bb0: read_stream_wrapper
-  0x50b9b0: init_scorer
-  0x582e10: init_action_class_list
-  0x528910: init_sound_sys
-  0x5268d0: try_init_sound_sys
-  0x404280: cPyFunction_set_func
-  0x414680: load_config
-  0x414810: save_config
-  0x4f42a0: close_server_socket
-  0x4f4d10: close_server
-  0x4f48e0: close_client
-  0x4f4fb0: is_server
-  0x4f4a10: is_client
-  0x4fac50: is_master
-  0x526910: close_sound_sys
-  0x526520: shutdown_sound_sys
-  0x5dd700: close_3d_engine
-  0x5a7320: close_window
-  0x5dff20: set_exception_handler
-  0x5a7f20: get_console_wnd
-  0x5a73a0: show_console
-  0x666c60: read_m3d
-  0x417df0: snprintf
-  0x5fc930: printf
-  0x6597d0: read_ini_entry
-  0x5fc0a0: engine_debug_log
-  0x5a7440: create_console_window
-  0x6114e0: setup_window
-  0x404420: clear_functions
-  0x405ca0: close_py_subsys
-  0x50bcb0: close_scorer
-  0x479b20: close_world
-  0x582e70: close_action_class
-  0x50b6a0: get_scorer
-  0x50ea20: scorer_parse_type
-  0x636580: list_models
-  0x5a90f0: Py_BuildValue
-  0x41c5a0: has_lst_file
-  0x5a8e90: py_error
-  0x5a9890: get_module_dict
-  0x5c7bb0: get_current_thread
-  0x5aa140: preload_lib
-  0x413c10: sprintf
-  0x405850: check_is_python
-  0x47bf90: setup_ent_list
-  0x474f80: ent_list_get_set
+  0x6283a0:
+    name: load_emi
+  0x4fa9f0:
+    name: send_pkt
+  0x5ca9e0:
+    signature: void* PyFrame_New(void* thread_state, void* code_object,void* globals, void* locals)
+    name: PyFrame_New
+  0x5bcae0:
+    signature: void PyErr_SetString(void* obj, const char* err_msg);
+    name: PyErr_SetString
+  0x5cb040:
+    signature: void* eval_code2(void* dict, const char* key, void* item);
+    name: eval_code2
+  0x5e3c50:
+    convention: cdecl-thiscall-ms
+    name: read_int
+  0x5e3b50:
+    convention: cdecl-thiscall-ms
+    name: read_block_header
+  0x5c66d0:
+    signature: void initerrors(void* dict);
+    name: initerrors
+  0x5bb370:
+    signature: int PyDict_SetItemString(void* dict, const char* key, void* item);
+    name: PyDict_SetItemString
+  0x5b9960:
+    signature: void* PyObject_NEW(void* type, void* typeobj);
+    name: PyObject_NEW
+  0x4145e0:
+    convention: cdecl-thiscall-ms
+    signature: bool get_config_var(char* name);
+    name: get_config_var
+  0x413470:
+    signature: void init_logging();
+    name: init_logging
+  0x5a8040:
+    signature: void Py_Initialize();
+    name: Py_Initialize
+  0x5bb4e0:
+    name: PyModule_GetDict
+    signature: void* PyModule_GetDict(void*);
+  0x5c6610:
+    name: _PyBuiltin_Init_1
+    signature: void* _PyBuiltin_Init_1();
+  0x5b5db0:
+    name: PyString_FromString
+    signature: void* PyString_FromString(const char*);
+  0x5ba3a0:
+    name: PyDict_New
+    signature: void* PyDict_New();
+  0x5c7bd0:
+    name: PyThreadState_Swap
+    signature: void* PyThreadState_Swap(void* new);
+  0x5c7870:
+    name: PyInterpreterState_New
+    signature: void* PyInterpreterState_New();
+  0x5c79b0:
+    name: PyThreadState_New
+    signature: void* PyThreadState_New(void* interp);
+  0x6ad1e9:
+    name: getenv
+    signature: char* getenv(char* var);
+  0x401180:
+    name: create_window
+  0x401240:
+    name: create_main_window
+  0x4016f0:
+    name: reg_get_val
+    signature: int reg_get_val(const char* value);
+  0x401770:
+    name: init
+  0x402190:
+    name: handle_console_input
+    signature: int handle_console_input(const char* input);
+  0x402510:
+    name: deinit_world
+  0x4026d0:
+    name: init_py
+  0x403370:
+    name: init_engine
+  0x4037e0:
+    name: init_debug
+  0x404280:
+    name: cPyFunction_set_func
+  0x404420:
+    name: clear_functions
+  0x404460:
+    name: register_c_callback
+    signature: int register_c_callback(const char* name,void* func);
+  0x404a50:
+    name: find_entity
+  0x404bb0:
+    name: ht_hash_ent
+    signature: int ht_hash_ent(const char* str);
+  0x405850:
+    name: check_is_python
+  0x405b40:
+    name: init_py_sub
+  0x405ca0:
+    name: close_py_subsys
+  0x4134c0:
+    signature: int write_log(unsigned int color, const char* msg);
+    name: write_log
+  0x4137e0:
+    signature: void write_html_log(const char* fmt,...);
+    name: write_html_log
+  0x413c10:
+    name: sprintf
+  0x413ee0:
+    name: dbg_log
+    signature: int dbg_log(const char* fmt,...);
+  0x414070:
+    name: throw_assertion_2
+    signature: void throw_assertion_2(const char* check,const char* file,const char* date, unsigned int line);
+  0x414280:
+    name: prepare_html_log
+    signature: int prepare_html_log(const char* filename);
+  0x414570:
+    name: setup_game_vars
+  0x414680:
+    name: load_config
+  0x414810:
+    name: save_config
+  0x417470:
+    name: load_game
+  0x417df0:
+    name: snprintf_1
+  0x417d80:
+    name: snprintf_2
+  0x418220:
+    name: get_version_info
+  0x419950:
+    name: fopen_2
+    signature: int fopen_2(const char* filename);
+  0x41ab50:
+    name: open_pak
+    signature: int open_pak(const char* filename, int unk_1,void* unk_ptr);
+  0x41c5a0:
+    name: has_lst_file
+    signature: int has_lst_file(void* unk_ptr);
+  0x474f80:
+    name: ent_list_get_set
+    signature: bool ent_list_get_set(const char* name);
+  0x479870:
+    name: make_world
+  0x479b20:
+    name: close_world
+  0x479b40:
+    name: init_world
+  0x47bf90:
+    convention: cdecl-thiscall-ms
+    name: create_ent_list
+    signature: bool create_ent_list(const char* name);
+  0x47c1e0:
+    name: ht_hash_ent_list
+    signature: int ht_hash_ent_list(const char* str);
+  0x4f42a0:
+    name: close_server_socket
+  0x4f48e0:
+    name: close_client
+  0x4f4a10:
+    name: is_client
+  0x4f4d10:
+    name: close_server
+  0x4f4fb0:
+    name: is_server
+  0x4fac50:
+    name: is_master
+  0x50b6a0:
+    name: get_scorer
+  0x50b9b0:
+    name: init_scorer
+  0x50bcb0:
+    name: close_scorer
+  0x50ea20:
+    name: scorer_parse_type
+  0x526520:
+    name: shutdown_sound_sys
+  0x5268d0:
+    name: try_init_sound_sys
+  0x526910:
+    name: close_sound_sys
+  0x528910:
+    name: init_sound_sys
+  0x582e10:
+    name: init_action_class_list
+  0x582e70:
+    name: close_action_class
+  0x5a7320:
+    name: close_window
+  0x5a73a0:
+    name: show_console
+  0x5a7440:
+    name: create_console_window
+  0x5a7f20:
+    name: get_console_wnd
+  0x5a8390:
+    name: PyRun_SimpleString
+    signature: int PyRun_SimpleString(const char* command);
+  0x5a8e90:
+    name: Py_FatalError
+    signature: void Py_FatalError(const char* msg);
+  0x5a8fb0:
+    name: Py_InitModule
+    signature: void* Py_InitModule(const char* name,void* methods);
+  0x5a90f0:
+    name: Py_BuildValue
+    signature: void* Py_BuildValue(const char* format, ...);
+  0x5a9890:
+    name: PyImport_GetModuleDict
+    signature: void* PyImport_GetModuleDict();
+  0x5aa140:
+    name: preload_lib
+  0x5b9e70:
+    name: PyObject_GetAttrString
+    signature: void* PyObject_GetAttrString(void* obj, const char* attr);
+  0x5bb9d0:
+    name: PyArg_ParseTuple
+    signature: int PyArg_ParseTuple(void* PyObj, char* format, ...);
+  0x5bc140:
+    name: convertsimple1
+    signature: static char* convertsimple1(void* arg, char** p_format, void* va_list);
+  0x5bc0f0:
+    name: convertsimple
+    signature: static char* convertsimple(void* arg, char** p_format, char* msgbuf);
+  0x5bbf60:
+    name: converttuple
+    signature: static char* converttuple(void* arg, char** p_format, void* va_list, int* levels, char* msgbuf, int toplevel);
+  0x5bbee0:
+    name: convertitem
+    signature: static char* convertitem(void* arg, char** p_format, void* va_list, int* levels, char* msgbuf);
+  0x5c7bb0:
+    name: PyThreadState_Get
+    signature: void* PyThreadState_Get();
+  0x5dd510:
+    name: init_engine_3d
+  0x5dd700:
+    name: close_3d_engine
+  0x5dff20:
+    name: set_exception_handler
+  0x5e3250:
+    name: read_stream
+  0x5e3500:
+    name: fopen
+  0x5e3800:
+    name: fopen_from_pak
+    signature: int fopen_from_pak(const char* filename,const char* mode);
+  0x5e3bb0:
+    name: read_stream_wrapper
+  0x5f7000:
+    name: read_ini
+  0x5f75e0:
+    name: init_d3d
+  0x5f9520:
+    name: handle_render_console_input
+  0x5fbc50:
+    name: throw_assertion_1
+    signature: void throw_assertion_1(const char* check,const char* file, unsigned int line);
+  0x5fc0a0:
+    name: engine_debug_log
+  0x5fc930:
+    name: printf
+  0x602a70:
+    name: render_frame
+  0x6114e0:
+    name: setup_window
+  0x636580:
+    name: list_models
+  0x63a2f0:
+    name: gdi_draw_line
+  0x650f80:
+    name: load_sm3
+  0x6597d0:
+    name: read_ini_entry
+    signature: bool read_ini_entry(void* dest,const char* key, const char* section);
+  0x6665a0:
+    name: load_m3d_1
+  0x666900:
+    name: load_m3d_2
+  0x666c60:
+    name: read_m3d
+  0x6b1c70:
+    name: strcmp
+    signature: bool strcmp(const char* s1,const char* s2);
+  0x6b738c:
+    name: handle_exception
 
 script: |
   e asm.cmt.right = true
-  e cmd.stack = true
   e scr.utf8 = true
   e asm.describe = false
   e graph.cmtright = true

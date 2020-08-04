@@ -1,10 +1,11 @@
 ## Features
 
 - read and write memory
+- disassemble memory (using zydis)
 - change DirectX state
 - Draw DirectX overlay (still need to make a useful overlay)
 - Dump various data structures to the console
-- Assemble and execute code on the fly
+- Assemble and execute code on the fly (using asmtk)
 - Can be controlled via keyboard shortcuts (TODO: allow defining own shortcuts for commands)
 
 ## Prerequisites
@@ -30,7 +31,34 @@ This will find the Games's installation folder, verify that the version you have
 - type `import ScrapHack`
 - type `$help`
 
-## Notes
+## Config file keys
 
-(this has only been tested with a (cracked/unpacked/de-obfuscated) `Scrap.exe` v1.0 with a SHA1 checksum of `d2dde960e8eca69d60c2e39a439088b75f0c89fa` , other version will crash if the memory offsets don't match)
+- patches.asm: map of address->list of assembly instructions
+- patches.hex: map of address->hex bytes
 
+Example:
+
+```json
+{
+    "patches": {
+        "hex": {
+            "0xDEADBEEF": "BADFOODDEADFEED"
+        },
+        "asm": {
+            "0xBADF00D": [
+                "pushad",
+                "call 0xf00dbabe",
+                "popad",
+                "mov eax, 0x42",
+                "ret"
+            ]
+        },
+    }
+}
+```
+
+## Third-Party components used
+
+- Zydis disassembler
+- asmJIT/asmTK assembler
+- nlohmann/json JSON-parser

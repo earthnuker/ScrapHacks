@@ -265,3 +265,5 @@ __pycache__/
 ScrapHacks/build/*
 ScrapHacks/src/D3D8_VMT.hpp
 .vscode/c_cpp_properties.json
+tools/*.log
+frida/*.mp

@@ -6,7 +6,8 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
-
+#include <fstream>
+// #include <Python.h>
 #include <Windows.h>
 
 using namespace std;
@@ -18,6 +19,7 @@ using namespace std;
 #include "Scrapland.hpp"
 #include "Structures.hpp"
 #include "Util.hpp"
+#include "Py_Mod.hpp"
 
 bool initialized = false;
 bool running = true;
@@ -28,12 +30,14 @@ void DllUnload();
 int hooked_console(const char *);
 void hook_exit();
 
-void setup_hooks() {
-    Hook::addr(reinterpret_cast<void *>(P_SCRAP_EXIT), hook_exit);
-    Hook::addr(reinterpret_cast<void *>(P_CON_HANDLER), hooked_console);
+void setup_hooks()
+{
+    Hook::addr(P_SCRAP_EXIT, hook_exit);
+    Hook::addr(P_CON_HANDLER, hooked_console);
 }
 
-void MainLoop() {
+void MainLoop()
+{
     setup_hooks();
     overlay = true;
     cout << "[*] Starting main Loop" << endl;
@@ -49,42 +53,56 @@ void MainLoop() {
     cout << "[ F ] \"Handbrake\" (*Will* crash the game after some time!)"
          << endl;
 
-    while (running) {
+    while (running)
+    {
         Sleep(100);
-        while (key_down('F')) {
+        while (key_down('F'))
+        {
             scrap_exec("dbg.brake()");
         }
-        if (key_down_norepeat(VK_F3)) {
+        if (key_down_norepeat(VK_F3))
+        {
             break;
         }
 
-        if (key_down_norepeat(VK_F7)) {
+        if (key_down_norepeat(VK_F7))
+        {
             int32_t *money = ptr<int32_t>(P_WORLD, O_MONEY);
             money[0] = 0x7fffffff;
         }
 
-        if (key_down_norepeat(VK_F9)) {
+        if (key_down_norepeat(VK_F8))
+        {
+            cout << "Not yet implemented" << endl;
+        }
+
+        if (key_down_norepeat(VK_F9))
+        {
             cout << "Entities:" << endl;
             dump_ht(ptr<HashTable<Entity>>(P_WORLD, O_ENTS));
             cout << "Entity Lists:" << endl;
             dump_ht(ptr<HashTable<EntityList>>(P_WORLD, O_ENTLISTS));
         }
-        if (key_down_norepeat(VK_F10)) {
+        if (key_down_norepeat(VK_F10))
+        {
             scrap_exec("dbg.settrace()");
         }
     }
     FreeLibraryAndExitThread(hMod, 0);
 }
 
-void InitConsole() {
+void InitConsole()
+{
     char me[1024];
-    GetModuleFileName(hMod, me, 1024);
+    GetModuleFileNameA(hMod, me, 1024);
     SetupConsole(me);
 }
 
-int hooked_console(const char *cmd) {
+int hooked_console(const char *cmd)
+{
     typedef decltype(&hooked_console) t_func;
-    if (cmd[0] == '$') {
+    if (cmd[0] == '$')
+    {
         handle_command(++cmd);
         return 0;
     }
@@ -93,7 +111,8 @@ int hooked_console(const char *cmd) {
     return ret;
 }
 
-void hook_exit() {
+void hook_exit()
+{
     typedef decltype(&hook_exit) t_func;
     shared_ptr<Hook> hook = Hook::get(hook_exit);
     DllUnload();
@@ -102,7 +121,8 @@ void hook_exit() {
     return;
 }
 
-void DllInit(HMODULE mod) {
+void DllInit(HMODULE mod)
+{
     hMod = mod;
     char mfn[1024];
     GetModuleFileNameA(0, mfn, 1024);
@@ -119,36 +139,23 @@ void DllInit(HMODULE mod) {
     CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)MainLoop, NULL, 0, 0);
     cout << "[*] Starting message pump" << endl;
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
     return;
 }
 
-void *H_port_FixupExtension(char *name, char *filename) {
-    cout<<"FixupExtension: "<<name<<": "<<filename<<endl;
-    Hook::drop(H_port_FixupExtension);
-    return NULL;
-}
-
-void *H_PyEval_CallObjectWithKeywords(void *func, void *arg, void *kwarg) {
-    cout<<"PyEval_CallObjectWithKeywords:"<<endl;
-    cout<<"\t func: "<<func<<endl;
-    cout<<"\t arg: "<<arg<<endl;
-    cout<<"\t kwarg: "<<kwarg<<endl;
-    Hook::drop(H_PyEval_CallObjectWithKeywords);
-    return NULL;
-}
-
-void DllPreInit() {
+void DllPreInit()
+{
+    Sleep(100);
     InitConsole();
-    Hook::addr(reinterpret_cast<void *>(0x5a9ca0), H_port_FixupExtension);
-    Hook::addr(reinterpret_cast<void *>(0x5cdb00),
-               H_PyEval_CallObjectWithKeywords);
+    InitPyMod();
 }
 
-void DllUnload() {
+void DllUnload()
+{
     SetConsoleCtrlHandler(NULL, false);
     unhook_d3d8();
     Hook::clear();

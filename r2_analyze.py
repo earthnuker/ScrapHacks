@@ -4,19 +4,19 @@ import json
 from datetime import datetime
 import subprocess as SP
 from tqdm import tqdm
-from pprint import pprint
-import os
 import sys
 import yaml
 
+tqdm_ascii = False
+
 r2cmds = []
-x64_dbg_script=[]
+x64_dbg_script = []
 script_path = os.path.dirname(os.path.abspath(__file__))
 scrap_exe = os.path.abspath(sys.argv[1])
 scrapland_folder = os.path.abspath(os.path.dirname(scrap_exe))
-r2_script_path=os.path.join(scrapland_folder, "scrap_dissect.r2")
-x64_dbg_script_path=os.path.join(scrapland_folder, "scrap_dissect.x32dbg.txt")
-json_path=os.path.join(scrapland_folder, "scrap_dissect.json")
+r2_script_path = os.path.join(scrapland_folder, "scrap_dissect.r2")
+x64_dbg_script_path = os.path.join(scrapland_folder, "scrap_dissect.x32dbg.txt")
+json_path = os.path.join(scrapland_folder, "scrap_dissect.json")
 
 assert os.path.isfile(scrap_exe), "File not found!"
 r2 = r2pipe.open(scrap_exe)
@@ -24,18 +24,21 @@ file_hashes = r2.cmdj("itj")
 target_hashes = {
     "sha1": "d2dde960e8eca69d60c2e39a439088b75f0c89fa",
     "md5": "a934c85dca5ab1c32f05c0977f62e186",
+    "sha256": "24ef449322f28f87b702834f1a1aac003f885db6d68757ff29fad3ddba6c7b88",
 }
 
 assert file_hashes == target_hashes, "Hash mismatch"
 
-def x64_dbg_label(addr,name,prefix=None):
+
+def x64_dbg_label(addr, name, prefix=None):
     global x64_dbg_script
-    if isinstance(addr,int):
-        addr=hex(addr)
+    if isinstance(addr, int):
+        addr = hex(addr)
     if prefix:
         x64_dbg_script.append(f'lbl {addr},"{prefix}.{name}"')
     else:
         x64_dbg_script.append(f'lbl {addr},"{name}"')
+
 
 def r2_cmd(cmd):
     global r2, r2cmds
@@ -54,13 +57,15 @@ def r2_cmdJ(cmd):
     r2cmds.append(cmd)
     return r2.cmdJ(cmd)
 
-t_start=datetime.today()
+
+t_start = datetime.today()
+
 
 def analysis(full=False):
     print("[*] Running analysis")
-    steps=[]
+    steps = []
     if full:
-        steps=[
+        steps = [
             "e anal.dataref = true",
             # "e anal.esil = true",
             "e anal.jmp.after = true",
@@ -72,52 +77,58 @@ def analysis(full=False):
             "e anal.vinfun = true",
             "e asm.anal = true",
         ]
-    steps+=["aaaaa"]
+    if full:
+        steps += ["aaaa"]
+    else:
+        steps += ["aaa"]
     for ac in steps:
         print(f"[*] Running '{ac}'")
         r2_cmd(f"{ac} 2>NUL")
 
-with open(os.path.join(script_path,"config.yml")) as cfg:
+
+with open(os.path.join(script_path, "config.yml")) as cfg:
     print("[*] Loading config")
-    config = type("Config",(object,),yaml.load(cfg,Loader=yaml.SafeLoader))
+    config = type("Config", (object,), yaml.load(cfg, Loader=yaml.SafeLoader))
 
 for line in config.script.strip().splitlines():
     r2_cmd(line)
 
 analysis(False)
 
-for addr,comment in config.comments.items():
+for addr, comment in config.comments.items():
     r2_cmd(f"CC {comment} @ {hex(addr)}")
 
 for t in config.types:
     r2_cmd(f'"td {t}"')
 
 for addr, name in config.flags.items():
-    x64_dbg_label(addr,name,"loc")
+    x64_dbg_label(addr, name, "loc")
     r2_cmd(f"f loc.{name} 4 {hex(addr)}")
 
 
-for addr, name in config.functions.items():
-    x64_dbg_label(addr,name,"fcn")
-    r2_cmd(f"afr fcn.{name} {hex(addr)}")
-
-for addr,sig in config.function_signatures.items():
-    r2_cmd(f'"afs {config.function_signatures[addr]}" @{hex(addr)}')
-
+for addr, func in config.functions.items():
+    name, sig = func.get("name"), func.get("signature")
+    if name:
+        x64_dbg_label(addr, name, "fcn")
+        r2_cmd(f"afr fcn.{name} {hex(addr)}")
+        r2_cmd(f"afn fcn.{name} {hex(addr)}")
+    if sig:
+        sig = sig.replace(name, "fcn." + name)
+        r2_cmd(f'"afs {sig}" @{hex(addr)}')
 
 
 def vtables():
     ret = {}
     print("[*] Analyzing VTables")
     vtables = r2_cmdJ("avj")
-    for c in tqdm(vtables, ascii=True):
+    for c in tqdm(vtables, ascii=tqdm_ascii):
         methods = []
-        name=config.VMTs.get(c.offset,f"{c.offset:08x}")
-        x64_dbg_label(c.offset,name,"vmt")
+        name = config.VMTs.get(c.offset, f"{c.offset:08x}")
+        x64_dbg_label(c.offset, name, "vmt")
         r2_cmd(f"f vmt.{name} 4 {hex(c.offset)}")
-        for idx,m in enumerate(tqdm(c.methods, ascii=True, leave=False)):
+        for idx, m in enumerate(tqdm(c.methods, ascii=tqdm_ascii, leave=False)):
             methods.append(hex(m.offset))
-            x64_dbg_label(m.offset,f"{name}.{idx}","fcn.vmt")
+            x64_dbg_label(m.offset, f"{name}.{idx}", "fcn.vmt")
             r2_cmd(f"afr fcn.vmt.{name}.{idx} {hex(m.offset)} 2>NUL")
         ret[hex(c.offset)] = methods
     return ret
@@ -127,14 +138,14 @@ def c_callbacks():
     print("[*] Parsing C Callbacks")
     funcs = {}
     res = r2_cmd("/r fcn.register_c_callback ~CALL[1]").splitlines()
-    for addr in tqdm(res, ascii=True):
+    for addr in tqdm(res, ascii=tqdm_ascii):
         r2_cmd(f"s {addr}")
         r2_cmd(f"so -3")
         func, name = r2_cmdJ(f"pdj 2")
         func = func.refs[0].addr
         name = r2_cmd(f"psz @{hex(name.refs[0].addr)}").strip()
         r2_cmd(f"afr fcn.callbacks.{name} {hex(func)} 2>NUL")
-        x64_dbg_label(func,f"{name}","fcn.callbacks")
+        x64_dbg_label(func, f"{name}", "fcn.callbacks")
         funcs[name] = hex(func)
     return funcs
 
@@ -142,22 +153,22 @@ def c_callbacks():
 def assertions():
     assertions = {}
     for (n_args, a_addr) in [
-        (4, "fcn.throw_assertion_1"),
-        (3, "fcn.throw_assertion_2"),
+        (3, "fcn.throw_assertion_1"),
+        (4, "fcn.throw_assertion_2"),
     ]:
         print(f"[*] Parsing C assertions for {a_addr}")
         res = r2_cmd(f"/r {a_addr} ~CALL[1]").splitlines()
         print()
-        for line in tqdm(res, ascii=True):
+        for line in tqdm(res, ascii=tqdm_ascii):
             addr = line.strip()
             r2_cmd(f"s {addr}")
             r2_cmd(f"so -{n_args}")
-            dis=r2_cmdJ(f"pij {n_args}")
+            dis = r2_cmdJ(f"pij {n_args}")
             if n_args == 4:
-                file, msg, date, line = dis
+                line, date, file, msg = dis
             elif n_args == 3:
                 date = None
-                file, msg, line = dis
+                line, file, msg = dis
             try:
                 file = r2_cmd(f"psz @{file.refs[0].addr}").strip()
                 msg = r2_cmd(f"psz @{msg.refs[0].addr}").strip()
@@ -180,32 +191,35 @@ def bb_refs(addr):
     ret = {}
     res = r2_cmd(f"/r {addr} ~fcn[0,1]").splitlines()
     print()
-    for ent in res:
+    for ent in tqdm(res, ascii=tqdm_ascii):
         func, hit = ent.split()
         ret[hit] = {"asm": [], "func": func}
         for ins in r2_cmdJ(f"pdbj @{hit}"):
             ret[hit]["asm"].append(ins.disasm)
     return ret
 
+
 def world():
     print("[*] Parsing World offsets")
     return bb_refs("loc.P_World")
 
+
 def render():
     print("[*] Parsing D3D_Device offsets")
     return bb_refs("loc.P_D3D8_Dev")
+
 
 def py_mods():
     print("[*] Parsing Python modules")
     res = r2_cmd("/r fcn.Py_InitModule ~CALL[1]").splitlines()
     print()
     py_mods = {}
-    for call_loc in tqdm(res, ascii=True):
+    for call_loc in tqdm(res, ascii=tqdm_ascii):
         r2_cmd(f"s {call_loc}")
         r2_cmd(f"so -3")
         args = r2_cmdJ("pdj 3")
         refs = []
-        if not all([arg.type == "push" for arg in args]):
+        if not all(arg.type == "push" for arg in args):
             continue
         for arg in args:
             refs.append(hex(arg.val))
@@ -214,7 +228,7 @@ def py_mods():
         name = r2_cmd(f"psz @{name}").strip()
         r2_cmd(f"s {methods}")
         r2_cmd(f"f py.{name} 4 {methods}")
-        x64_dbg_label(methods,f"{name}","py")
+        x64_dbg_label(methods, f"{name}", "py")
         py_mods[name] = {"methods_addr": methods, "doc": doc, "methods": {}}
         while True:
             m_name, m_func, _, m_doc = [v.value for v in r2_cmdJ(f"pfj xxxx")]
@@ -223,14 +237,14 @@ def py_mods():
             m_name, m_func, m_doc = map(hex, (m_name, m_func, m_doc))
             m_name = r2_cmd(f"psz @{m_name}").strip()
             r2_cmd(f"f py.{name}.{m_name}.__doc__ 4 {m_doc}")
-            if int(m_doc,16)!=0:
-                x64_dbg_label(m_doc,f"{name}.{m_name}.__doc__","py")
+            if int(m_doc, 16) != 0:
+                x64_dbg_label(m_doc, f"{name}.{m_name}.__doc__", "py")
                 m_doc = r2_cmd(f"psz @{m_doc}").strip()
             else:
-                m_doc=None
+                m_doc = None
             py_mods[name]["methods"][m_name] = {"addr": m_func, "doc": m_doc}
             r2_cmd(f"afr py.{name}.{m_name} {m_func} 2>NUL")
-            x64_dbg_label(m_func,f"{name}.{m_name}","fcn.py")
+            x64_dbg_label(m_func, f"{name}.{m_name}", "fcn.py")
             r2_cmd("s +16")
     return py_mods
 
@@ -240,7 +254,7 @@ def game_vars():
     print("[*] Parsing Game variables")
     res = r2_cmd("/r fcn.setup_game_vars ~CALL[1]").splitlines()
     print()
-    for line in tqdm(res, ascii=True):
+    for line in tqdm(res, ascii=tqdm_ascii):
         addr = line.strip()
         r2_cmd(f"s {addr}")
         args = r2_cmd("pdj -5")  # seek and print disassembly
@@ -259,27 +273,22 @@ def game_vars():
                 break
         if len(args_a) != 4:
             continue
-        if not all(["val" in v for v in args_a]):
+        if not all("val" in v for v in args_a):
             continue
         addr, name, _, desc = [v["val"] for v in args_a]
         name = r2_cmd(f"psz @{hex(name)}").strip()
         desc = r2_cmd(f"psz @{hex(desc)}").strip()
         addr = hex(addr)
         r2_cmd(f"f loc.gvar.{name} 4 {addr}")
-        x64_dbg_label(addr,f"{name}","loc.gvar")
+        x64_dbg_label(addr, f"{name}", "loc.gvar")
         ret[addr] = {"name": name, "desc": desc}
     return ret
 
 
-ret = dict(
-    game_vars=game_vars(),
-    c_callbacks=c_callbacks(),
-    py_mods=py_mods(),
-    assertions=assertions(),
-    vtables=vtables(),
-    world=world(),
-    render=render(),
-)
+ret = {}
+# world, render
+for func in ["game_vars", "c_callbacks", "py_mods", "assertions", "vtables"]:
+    ret[func] = globals()[func]()
 
 analysis(True)
 
@@ -288,7 +297,7 @@ with open(json_path, "w") as of:
 
 print("[+] Wrote scrap_dissect.json")
 
-with open(x64_dbg_script_path,"w") as of:
+with open(x64_dbg_script_path, "w") as of:
     of.write("\n".join(x64_dbg_script))
 
 print("[+] Wrote scrap_dissect.x32dbg.txt")
@@ -296,30 +305,37 @@ print("[+] Wrote scrap_dissect.x32dbg.txt")
 with open(r2_script_path, "w") as of:
     wcmds = []
     for cmd in r2cmds:
-        record=True
-        for start in ["p","/","s"]:
+        if cmd == "avj":
+            continue
+        record = True
+        for start in ["p", "/", "s"]:
             if cmd.strip('"').startswith(start):
-                record=False
+                record = False
         if record:
             wcmds.append(cmd)
     of.write("\n".join(wcmds))
 
 print("[+] Wrote scrap_dissect.r2")
 
-r2.quit()
 
-def start_program(cmdl,**kwargs):
-    if os.name=='nt':
-        return SP.Popen(['cmd','/c','start']+cmdl,**kwargs)
+def start_program(cmdl, **kwargs):
+    if os.name == "nt":
+        return SP.Popen(["cmd", "/c", "start"] + cmdl, **kwargs)
     else:
-        return SP.Popen(cmdl,**kwargs)
+        return SP.Popen(cmdl, **kwargs)
 
-print("[+] Analysis took:",datetime.today()-t_start)
 
+print("[+] Analysis took:", datetime.today() - t_start)
 
 print("[+] Executing Cutter")
 try:
-    start_program(['cutter','-A','0','-i',r2_script_path,scrap_exe],cwd=scrapland_folder,shell=False)
+    start_program(
+        ["cutter", "-A", "0", "-i", r2_script_path, scrap_exe],
+        cwd=scrapland_folder,
+        shell=False,
+    )
 except FileNotFoundError:
     print("[-] cutter not installed, falling back to r2")
-    start_program(['r2','-i',r2_script_path,scrap_exe],cwd=scrapland_folder,shell=False)
+    start_program(
+        ["r2", "-i", r2_script_path, scrap_exe], cwd=scrapland_folder, shell=False
+    )

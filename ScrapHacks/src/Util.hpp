@@ -26,7 +26,7 @@ string GetLastErrorAsString() {
     size_t m_size = FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        NULL, errorMessageID, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
         (LPSTR)&messageBuffer, 0, NULL);
     string message(messageBuffer, m_size);
     LocalFree(messageBuffer);

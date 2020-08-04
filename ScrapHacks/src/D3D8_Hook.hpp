@@ -147,6 +147,13 @@ void unhook_d3d8() {
     hooked=false;
 }
 
+map<size_t,void*> *dx_hooks = new map<size_t,void*>({
+    {VMT_IDirect3DDevice8::m_EndScene,H_EndScene},
+    {VMT_IDirect3DDevice8::m_BeginScene,H_BeginScene},
+    {VMT_IDirect3DDevice8::m_DrawIndexedPrimitive,H_DrawIndexedPrimitive},
+    {VMT_IDirect3DDevice8::m_SetLight,H_SetLight},
+});
+
 void hook_d3d8() {
     if (hooked) {
         return;
@@ -162,11 +169,9 @@ void hook_d3d8() {
     hFont = CreateFontA(15, 0, 0, 0, FW_EXTRABOLD, 0, 0, 0, ANSI_CHARSET, 0, 0,
                         0, 0, "Lucida Console");
     hBrush = CreateSolidBrush(D3DCOLOR_ARGB(25, 0, 0, 0));
-    Hook::addr(GetVTable(dev)[VMT_IDirect3DDevice8::m_EndScene], H_EndScene);
-    Hook::addr(GetVTable(dev)[VMT_IDirect3DDevice8::m_BeginScene], H_BeginScene);
-    Hook::addr(GetVTable(dev)[VMT_IDirect3DDevice8::m_DrawIndexedPrimitive],
-               H_DrawIndexedPrimitive);
-    Hook::addr(GetVTable(dev)[VMT_IDirect3DDevice8::m_SetLight], H_SetLight);
+    for (auto h: *dx_hooks) {
+        Hook::addr(GetVTable(dev)[h.first], h.second);
+    }
     hooked=true;
     return;
 }

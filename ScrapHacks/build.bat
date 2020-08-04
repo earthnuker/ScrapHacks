@@ -5,6 +5,15 @@ if "%VSINSTALLDIR%"=="" (
     call "%%i" x86
   )
 )
-if not exist build cmake -G"NMake Makefiles" -B build
-cmake --build build --target install
+if "%VSINSTALLDIR%"=="" (
+  echo "VSINSTALLDIR" not set something is wrong!
+) else (
+  if not exist build cmake -G"NMake Makefiles" -B build
+  if "%1"=="--run" (
+    cmake --build build --target run
+  ) else (
+    cmake --build build --target install
+  )
+)
+
 endlocal
