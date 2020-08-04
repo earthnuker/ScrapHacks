@@ -39,7 +39,7 @@ struct Block {
 |----------|-----------------------------|
 | ANI      | Animation data?             |
 | AMC      | Collision Data              |
-| CMSH     | Mesh data?                  |
+| CMSH     | Collision Mesh Data         |
 | INI      | INI-Configuration data      |
 | LUZ      | Lighting information        |
 | MAT      | Material information        |
