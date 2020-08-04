@@ -25,7 +25,7 @@ struct Block {
 | .dum           | Dummy (map object) file  |
 | .pth           | AI Path                  |
 | .emi           | Emission maps/Materials? |
-| .amc           | ???                      |
+| .amc           | Collision Data           |
 
 | File ID | Chunk IDs                                                                |
 |---------|--------------------------------------------------------------------------|
