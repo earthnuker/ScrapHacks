@@ -261,9 +261,13 @@ __pycache__/
 *.pyc
 
 .history
+**/.history
 
 ScrapHacks/build/*
 ScrapHacks/src/D3D8_VMT.hpp
 .vscode/c_cpp_properties.json
 tools/*.log
 frida/*.mp
+frida/dump.mp.xz
+terms.py
+hist_restore.py

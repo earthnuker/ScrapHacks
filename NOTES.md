@@ -11,7 +11,6 @@
 - `-dedicated`: start in mutliplayer dedicated server mode (needs to be used with `-server`)
 - `-server`: start in multiplayer server mode
 
-# Functions identified:
 
 ## Ingame-Console (Ctrl+\^ or right click on titlebar and select "switch console") (Handler@`0x402190`):
 
@@ -134,56 +133,57 @@ struct GameVar {
 
 Types
 
-| Value | Type            |
-|-------|-----------------|
-| `0x1` | const char*     |
-| `0x2` | int32_t         |
-| `0x3` | List of Defines |
-| `0x4` | float           |
-| `0x5` | function        |
-| `0x6` | Script function |
+ Value | Type            
+ ----- | --------------- 
+ `0x1` | const char*     
+ `0x2` | int32_t         
+ `0x3` | List of Defines 
+ `0x4` | float           
+ `0x5` | function        
+ `0x6` | Script function 
 
 ## Game World/State Pointer @ `0x7fe944`
 
 Points to World struct
 
-| Offset | Type                     | Description                            |
-|--------|--------------------------|----------------------------------------|
-| 0x0000 | `void**`                 | Virtual Method Table                   |
-| 0x0004 | `uint32_t`               | Size of Entity Hashtable               |
-| 0x0008 | `void**`                 | Pointer to Entity Hashtable            |
-| 0x0288 | `pyEntity*`              | UsrEntity[0]                           |
-| 0x028C | `pyEntity*`              | UsrEntity[1]                           |
-| 0x0290 | `pyEntity*`              | UsrEntity[2]                           |
-| 0x0294 | `pyEntity*`              | UsrEntity[3]                           |
-| 0x02B8 | `uint32_t`               | Number of entity lists                 |
-| 0x02BC | `void**`                 | Pointer to entity list Hashtable       |
-| 0x0330 | `float[3]`               | Time (why 3 times?)                    |
-| 0x1C6C | `float`                  | Alarm level                            |
-| 0x1C68 | `float`                  | Alarm Grow Level                       |
-| 0x2158 | `float`                  | Used in `World_Init`                   |
-| 0x2170 | `???`                    | Used in `World_Init`                   |
-| 0x2180 | `float`                  | Used in `World_Init`                   |
-| 0x2188 | `void*`                  | Used in `World_Init`                   |
-| 0x218C | `void*`                  | Used in `World_Init`                   |
-| 0x2190 | `float`                  | Used in `World_Init`                   |
-| 0x2198 | `void*`                  | Used in `World_Init`                   |
-| 0x219C | `void*`                  | Used in `World_Init`                   |
-| 0x21A0 | `void**`                 | Used in `World_Init` (VTable pointer?) |
-| 0x21B4 | `void**`                 | Used in `World_Init` (VTable pointer?) |
-| 0x21C8 | `???`                    | Used in `World_Init`                   |
-| 0x2204 | `uint32_t` or `uint16_t` | Used in `World_Init`                   |
-| 0x2230 | `float`                  | Used in `World_Init`                   |
-| 0x2238 | `???`                    | Used in `World_Init`                   |
-| 0x2254 | `float`                  | Used in `World_Init`                   |
+ Offset | Type                     | Description                            
+ ------ | ------------------------ | -------------------------------------- 
+ 0x0000 | `void**`                 | Virtual Method Table                   
+ 0x0004 | `uint32_t`               | Size of Entity Hashtable               
+ 0x0008 | `void**`                 | Pointer to Entity Hashtable            
+ 0x00B0 | `??`                     | Pointer to Ground Object (?)           
+ 0x0288 | `pyEntity*`              | UsrEntity[0]                           
+ 0x028C | `pyEntity*`              | UsrEntity[1]                           
+ 0x0290 | `pyEntity*`              | UsrEntity[2]                           
+ 0x0294 | `pyEntity*`              | UsrEntity[3]                           
+ 0x02B8 | `uint32_t`               | Number of entity lists                 
+ 0x02BC | `void**`                 | Pointer to entity list Hashtable       
+ 0x0330 | `float[3]`               | Time (why 3 times?)                    
+ 0x1C6C | `float`                  | Alarm level                            
+ 0x1C68 | `float`                  | Alarm Grow Level                       
+ 0x2158 | `float`                  | Used in `World_Init`                   
+ 0x2170 | `???`                    | Used in `World_Init`                   
+ 0x2180 | `float`                  | Used in `World_Init`                   
+ 0x2188 | `void*`                  | Used in `World_Init`                   
+ 0x218C | `void*`                  | Used in `World_Init`                   
+ 0x2190 | `float`                  | Used in `World_Init`                   
+ 0x2198 | `void*`                  | Used in `World_Init`                   
+ 0x219C | `void*`                  | Used in `World_Init`                   
+ 0x21A0 | `void**`                 | Used in `World_Init` (VTable pointer?) 
+ 0x21B4 | `void**`                 | Used in `World_Init` (VTable pointer?) 
+ 0x21C8 | `???`                    | Used in `World_Init`                   
+ 0x2204 | `uint32_t` or `uint16_t` | Used in `World_Init`                   
+ 0x2230 | `float`                  | Used in `World_Init`                   
+ 0x2238 | `???`                    | Used in `World_Init`                   
+ 0x2254 | `float`                  | Used in `World_Init`                   
 
 ## cPyEntity structure
 
-| Offset | Type     | Description          |
-|--------|----------|----------------------|
-| 0x0000 | `void**` | Virtual Method Table |
-| 0x0004 | `char*`  | Name                 |
-| 0x0008 | `void*`  | ???                  |
+ Offset | Type     | Description          
+ ------ | -------- | -------------------- 
+ 0x0000 | `void**` | Virtual Method Table 
+ 0x0004 | `char*`  | Name                 
+ 0x0008 | `void*`  | ???                  
 
 
 ## Entity Hash Table
@@ -202,12 +202,12 @@ struct HT_Entry {
 
 Data format:
 
-| Offset | Type          | Description              |
-|--------|---------------|--------------------------|
-| 0x0    | `void**`      | Virtual Method Table (?) |
-| 0x4    | `const char*` | name as string           |
-| 0x14   | `void*`       | pointer to self (why?)   |
-| 0x28   | `float[3]`    | Position in Game World   |
+ Offset | Type          | Description              
+ ------ | ------------- | ------------------------ 
+ 0x0    | `void**`      | Virtual Method Table (?) 
+ 0x4    | `const char*` | name as string           
+ 0x14   | `void*`       | pointer to self (why?)   
+ 0x28   | `float[3]`    | Position in Game World   
 
 ## EntityList Hash Table
 
@@ -254,15 +254,27 @@ Player Join Packet
 09c9e028  35 2c 31 35 2c 31 02 00 00 00                    5,15,1....
 ```
 
-| Message                                  | Description                                                       |
-|------------------------------------------|-------------------------------------------------------------------|
-| `5c68625c32383230395c73637261706c616e64` | "Scrapland Server" announcement broadcast (`\hb\28209\scrapland`) |
-| `7f01000007`                             | Retrieve Game info                                                |
-| `48423d35323932322c3235363a323830383600` | Connection Information (`HB=52922,256:28086`)                     |
+ Message                                  | Description                                                       
+ ---------------------------------------- | ----------------------------------------------------------------- 
+ `5c68625c32383230395c73637261706c616e64` | "Scrapland Server" announcement broadcast (`\hb\28209\scrapland`) 
+ `7f01000007`                             | Retrieve Game info                                                
+ `48423d35323932322c3235363a323830383600` | Connection Information (`HB=52922,256:28086`)                     
 
 # [Notes](NOTES.md)
 
 ## File Formats
+
+ File Extension | Description              | Chunked 
+ -------------- | ------------------------ | ------- 
+ .packed        | Game Data Archive        | n       
+ .cm3           | Animation file           | y       
+ .sm3           | 3d model file            | y       
+ .dum           | Dummy (map object) file  | y       
+ .pth           | AI Path                  | n       
+ .emi           | Emission maps/Materials? | y       
+ .amc           | Collision Data           | y       
+ .ini           | Configuration            | n       
+ .txa           | Texture Animation Config | n       
 
 - [Chunked](file_formats/chunked.md)
 - [Packed](file_formats/packed.md)
@@ -290,7 +302,6 @@ check `r2_analyze.py` for full list
 # How to enable External Console:
 
 1. Right click on the title bar (in windowed mode) and click "Switch Console"
-2. or Use a custom Content Pack (**untested!**)
 
 # How to enable Scenegraph debugging console
 

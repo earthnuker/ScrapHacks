@@ -5,24 +5,30 @@ project(ScrapHacks
         DESCRIPTION "Scrapland memory hacking library"
         LANGUAGES CXX)
 
+message(STATUS "SCRAPLAND_DIR=${SCRAPLAND_DIR}")
 message(STATUS "Fetching Scrapland installation folder")
-get_filename_component(SCRAPLAND_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\MercurySteam Entertainment\\Scrapland;DIRECTORY]" ABSOLUTE CACHE)
+get_filename_component(DEFAULT_SCRAPLAND_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\MercurySteam Entertainment\\Scrapland;DIRECTORY]" ABSOLUTE CACHE)
 
-if(NOT IS_ABSOLUTE "${SCRAPLAND_DIR}" OR NOT EXISTS "${SCRAPLAND_DIR}")
-  message(FATAL_ERROR "Scrapland installation folder not found!")
+if(NOT IS_ABSOLUTE "${DEFAULT_SCRAPLAND_DIR}" OR NOT EXISTS "${DEFAULT_SCRAPLAND_DIR}")
+  set(DEFAULT_SCRAPLAND_DIR "")
 endif()
+set(SCRAPLAND_DIR "${DEFAULT_SCRAPLAND_DIR}" CACHE STRING "Scrapland installation path")
+
 
 message(STATUS "Scrapland found at ${SCRAPLAND_DIR}")
 
-message(STATUS "Checking Scrap.exe hash")
+message(CHECK_START "Checking Scrap.exe hash")
 file(SHA1 "${SCRAPLAND_DIR}/Bin/Scrap.exe" SCRAP_EXE_HASH)
 
 if(NOT ${SCRAP_EXE_HASH} STREQUAL "d2dde960e8eca69d60c2e39a439088b75f0c89fa")
-  message(FATAL_ERROR "Scrap.exe hash miss match!")
+  message(CHECK_FAIL  "Scrap.exe hash miss match ScrapHacks will probably crash your game!")
+else()
+message(CHECK_PASS   "Hash matches!")
 endif()
 
 # ==============================
 # "${SCRAPLAND_DIR}/Bin/Scrap.exe"
+
 add_custom_target(
   run
   COMMAND "Scrap.exe"
@@ -30,6 +36,7 @@ add_custom_target(
   VERBATIM
 )
 add_dependencies(run install)
+
 # ==============================
 
 set(COMPONENT "ScrapHacks")
@@ -40,7 +47,7 @@ set(ASMJIT_EMBED ON CACHE INTERNAL "")
 set(ASMTK_EMBED ON CACHE INTERNAL "")
 set(ZYDIS_BUILD_TOOLS OFF CACHE INTERNAL "")
 set(ZYDIS_BUILD_EXAMPLES OFF CACHE INTERNAL "")
-set(toml11_BUILD_TEST OFF CACHE INTERNAL "")  
+set(toml11_BUILD_TEST OFF CACHE INTERNAL "")
 
 if(WIN32)
   if(MSVC)
@@ -73,28 +80,28 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-    ASM_JIT
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
-    GIT_REPOSITORY git@github.com:asmjit/asmjit.git
-    GIT_SHALLOW true
-    INSTALL_COMMAND ""
-    CONFIGURE_COMMAND ""
+  ASM_JIT
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+  GIT_REPOSITORY git@github.com:asmjit/asmjit.git
+  GIT_SHALLOW true
+  INSTALL_COMMAND ""
+  CONFIGURE_COMMAND ""
 )
 
 FetchContent_Declare(
-    ASM_TK
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
-    GIT_REPOSITORY git@github.com:asmjit/asmtk.git
-    GIT_SHALLOW true
-    INSTALL_COMMAND ""
+  ASM_TK
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+  GIT_REPOSITORY git@github.com:asmjit/asmtk.git
+  GIT_SHALLOW true
+  INSTALL_COMMAND ""
 )
 
 FetchContent_Declare(
-    Zydis
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
-    GIT_REPOSITORY git@github.com:zyantific/zydis.git
-    GIT_SHALLOW true
-    INSTALL_COMMAND ""
+  Zydis
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+  GIT_REPOSITORY git@github.com:zyantific/zydis.git
+  GIT_SHALLOW true
+  INSTALL_COMMAND ""
 )
 
 FetchContent_MakeAvailable(Python DirectX ASM_JIT ASM_TK Zydis)
@@ -125,6 +132,7 @@ add_custom_command(
   COMMENT "Generating D3D8_VMT.hpp from d3d8.h"
   VERBATIM
 )
+
 add_custom_target(D3D8_VMT ALL
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/D3D8_VMT.hpp")
 

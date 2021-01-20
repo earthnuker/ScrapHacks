@@ -64,6 +64,9 @@ flags:
   0x8c6140: P_module_filename
   0x853954: P_D3DApp
   0x853091: N_Uniones
+  0x7faa4c: server_state
+  0x8039a8: client_data
+  0x8038a0: client_ship
   
   # 0x7fbe24:
   # 0x7fa778:
@@ -101,6 +104,48 @@ types:
   - "struct HashTable { uint32_t size; struct HashTableEntry** data; };"
   - "struct va_list { unsigned int gp_offset; unsigned int fp_offset; void *overflow_arg_area; void *reg_save_area; };"
 functions:
+  0x5dadc0:
+    name: read_MAT_block
+  0x5daf10:
+    name: read_MAP_block
+  0x60d710:
+    name: read_INI_block
+  0x6155b0:
+    name: read_DUM_block
+  0x628760:
+    name: read_EMI_block
+  0x62c070:
+    name: read_AMC_block
+  0x62c580:
+    name: read_SUEL_block
+  0x631570:
+    name: read_CMSH_block
+  0x631940:
+    name: read_QUAD_block
+  0x64d380:
+    name: read_LUZ_block
+  0x650f80:
+    name: read_SCN_block
+  0x652480:
+    name: read_LFVF_block
+  0x658770:
+    name: read_CAM_block
+  0x6665a0:
+    name: read_CM3_block
+  0x666900:
+    name: read_SM3_block
+  0x6715e0:
+    name: read_PORT_block
+  0x675c90:
+    name: read_MD3D_block
+  0x6776d0:
+    name: read_NAM_block
+  0x6787a0:
+    name: read_ANI_block
+  0x6869b0:
+    name: read_SPR3_block
+  0x6875d0:
+    name: read_EVA_block
   0x6283a0:
     name: load_emi
   0x4fa9f0:
@@ -371,15 +416,9 @@ functions:
     name: list_models
   0x63a2f0:
     name: gdi_draw_line
-  0x650f80:
-    name: load_sm3
   0x6597d0:
     name: read_ini_entry
     signature: bool read_ini_entry(void* dest,const char* key, const char* section);
-  0x6665a0:
-    name: load_m3d_1
-  0x666900:
-    name: load_m3d_2
   0x666c60:
     name: read_m3d
   0x6b1c70:

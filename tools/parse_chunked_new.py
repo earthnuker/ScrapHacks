@@ -38,12 +38,12 @@ def seek_to(fh, offset, pos=None):
     yield
     fh.seek(pos)
 
-def read_array(s,fh):
-    ret=[]
+
+def read_array(s, fh):
+    ret = []
     count = read_struct("<I", fh)[0]
-    size = struct.calcsize(s)
     for _ in range(count):
-        ret.append(read_struct(s,fh))
+        ret.append(read_struct(s, fh))
     return ret
 
 
@@ -93,7 +93,10 @@ class Parser:
         print("{}[{}] {} bytes".format("  " * self.depth, magic, len(data)))
         self.depth += 1
         fh = BytesIO(data)
-        ret = getattr(self, magic, lambda fh: self._default(magic, fh))(fh)
+        if len(data) != 0:
+            ret = getattr(self, magic, lambda fh: self._default(magic, fh))(fh)
+        else:
+            ret = None
         pos = fh.tell()
         leftover = len(fh.read())
         fh.seek(pos)
@@ -198,17 +201,27 @@ class Parser:
             dum = {}
             dum["name"] = read_str(fh)
             dum["pos"] = read_struct("<fff", fh)
-            dum["rot"] = read_struct("<fff", fh)
+            dum["ang"] = read_struct("<fff", fh)
             dum["has_ini"] = read_struct("<I", fh)[0]
             if dum["has_ini"]:
-                dum['ini']=self.parse_block(fh)
-            dum["has_next"] = read_struct("<I", fh)[0]
+                dum["ini"] = self.parse_block(fh)
+            dum["unk_1"] = read_struct("<I", fh)[0]
             ret["dummies"].append(dum)
         assert fh.read() == b"", "Leftover Data"
         return ret
 
-    # def AMC(self, fh):
-    #     return len(fh.read())
+    def AMC(self, fh):
+        ret = {}
+        ret["unk_1"] = read_struct("<I", fh)[0]
+        ret["unk_2"] = read_struct("<I", fh)[0]
+        ret["floats"] = read_struct("<16f", fh)  # ???
+        ret["cmsh_1"] = [self.parse_block(fh) for _ in range(2)]
+        ret["num_submeshes"] = read_struct("<I", fh)[0]
+        ret["cmsh_2"] = [self.parse_block(fh) for _ in range(ret["num_submeshes"])]
+        return ret
+
+    def CMSH(self, fh):
+        return {"ret": len(fh.read())}
 
     # def EMI(self, fh):
     #     return len(fh.read())
@@ -218,30 +231,14 @@ class Parser:
 
 basedir = r"D:/Games/Deep Silver/Scrapland/extracted/Data.packed"
 
-files = [
-    r"Models/Chars/Dtritus/Dtritus.sm3",
-    r"Models/Elements/AnilloEstructuraA/AnilloEstructuraA.SM3",
-    r"models/elements/antenaa/antenaa.lod1.sm3",
-    # r"models/elements/abshield/anm/loop.cm3",
-    # r"levels/fake/map/map3d.amc",
-    # r"levels/shipedit/map/map3d.dum",
-    # r"levels/menu/map/map3d.emi",
-    r"Models/Skies/Menu/Sky.SM3",
-    r"Levels/Menu/Map/Map3D.SM3",
-    r"Models/Elements/AnilloEstructuraD/AnilloEstructuraD.LOD1.SM3",
-    # r"levels/menu/map/map3d.amc",
-    # r"levels/menu/map/map3d.dum",
-    # r"levels/menu/map/scenecamera/anm/loop.cm3",
-    r"models/chars/boss/boss.sm3",
-    # r"models/chars/boss/anm/boss_walk.cm3",
-]
-
 filt = [s.lower() for s in sys.argv[1:]]
 
-for root, folders, files in os.walk(basedir):
+for root, _, files in os.walk(basedir):
     for file in files:
-        path = os.path.join(root, file).replace("\\","/")
-        if not path.lower().endswith(".dum".lower()):
+        path = os.path.join(root, file).replace("\\", "/")
+        if not path.lower().endswith(".amc".lower()):
+            continue
+        if "menu" not in path.lower():
             continue
         print("Parsing", path)
         p = Parser(debug=True)
@@ -252,4 +249,3 @@ for root, folders, files in os.walk(basedir):
                     break
                 pprint(parsed, compact=False, indent=4)
         print("#" * 50)
-

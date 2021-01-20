@@ -1,0 +1,12 @@
+[package]
+name = "scrapper"
+version = "0.1.0"
+authors = ["Daniel Seiller <earthnuker@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+byteorder = "1.4.2"
+encoding = "0.2.33"
+structopt = {version="0.3.21",features = [ "paw" ]}

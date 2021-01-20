@@ -113,7 +113,6 @@ for addr, func in config.functions.items():
         r2_cmd(f"afr fcn.{name} {hex(addr)}")
         r2_cmd(f"afn fcn.{name} {hex(addr)}")
     if sig:
-        sig = sig.replace(name, "fcn." + name)
         r2_cmd(f'"afs {sig}" @{hex(addr)}')
 
 
@@ -305,7 +304,7 @@ print("[+] Wrote scrap_dissect.x32dbg.txt")
 with open(r2_script_path, "w") as of:
     wcmds = []
     for cmd in r2cmds:
-        if cmd == "avj":
+        if cmd=="avj":
             continue
         record = True
         for start in ["p", "/", "s"]:
@@ -316,7 +315,6 @@ with open(r2_script_path, "w") as of:
     of.write("\n".join(wcmds))
 
 print("[+] Wrote scrap_dissect.r2")
-
 
 def start_program(cmdl, **kwargs):
     if os.name == "nt":

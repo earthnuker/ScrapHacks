@@ -31,7 +31,7 @@ This will find the Games's installation folder, verify that the version you have
 - type `import ScrapHack`
 - type `$help`
 
-## Config file keys
+## Config file keys (not yet implemented?)
 
 - patches.asm: map of address->list of assembly instructions
 - patches.hex: map of address->hex bytes
@@ -62,3 +62,4 @@ Example:
 - Zydis disassembler
 - asmJIT/asmTK assembler
 - nlohmann/json JSON-parser
+- LIEF/lief
