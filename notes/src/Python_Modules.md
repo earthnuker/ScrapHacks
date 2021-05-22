@@ -3,9 +3,9 @@
 ## SScorer
 
 - *SetCursor*: `<built-in function SetCursor>`
-```
+
 SetCursor(playernumber,CursorName) : pone un item del scorer como cursor
-```
+
 - *Show*: `<built-in function Show>`
 ```
 Show(playernumber) : Activa el scorer.

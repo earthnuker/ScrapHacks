@@ -1,15 +1,45 @@
 # ScrapEngine
 
+- Based on Mercury Engine
 - Ingame Scripting Language: Python 1.5.2
-- Interesting memory locations and functions are noted in `config.yml`
 
 ## Launch options
 
+Checked in `0x00401010`
+
 - `-console`: open external console window on start
-- `-wideWindow`: start game in widescreen mode
+- `-inifile`: *unknown* some kind of `.ini` file, seems to be related to `m3d.ini` in `Data.packed`
+
+Checked in `0x004039b0`
+
+- `-build`: Rebuild `Data.packed` (needs a `filelist.2Bpack`)
 - `-dedicated`: start in multiplayer dedicated server mode (needs to be used with `-server`)
 - `-server`: start in multiplayer server mode
-- `-build`: Rebuild `Data.packed` (needs a `filelist.2Bpack`)
+
+Checked in `0x00401180`
+
+- `-wideWindow`: start game in widescreen mode
+
+
+## Files
+
+- `engine.txt`: Contains engine commands? Lexer/Parser @ `0x6168a0`
+  - Errors get printed to Scene graph debugging console
+  - Command buffer @ `0x8c1b30`
+  - Commands:
+    - `Load`: Load Model?
+    - `AddAnim`: Load Animation data?
+    - `PlayAnim`: Play Animation?
+    - `PivotPos`: ?
+    - `FUNDIR_NODOS`: ?
+    - `EFEC_MALLA`: ?
+  - Values:
+    - `true`
+    - `false`
+- `engine.log`: Created when `engine.txt` exists
+
+`engine.txt` containing `Load("Models/Vehicles/Ships/SBoss1/SBoss1.SM3", 1)` results in error `D:\Games\Deep Silver\Scrapland\engine.txt (1): Error: missing a ( character`
+
 
 ## Ingame-Console
 
@@ -21,9 +51,9 @@
 * `?`: Show all Game Engine Variables
 * `?<String>`: Show all Game Engine Variables matching `<String>`
 * `/<command>`: Run Command defined in `QuickConsole.py`
-  * `import quickconsole;quickconsole.%s()`
+  * Expands to `import quickconsole;quickconsole.%s()`
 * `/<command> <arg>,<arg>`: Run function in `QuickConsole.py` with argument(s)
-  * `import quickconsole;quickconsole.%s(%s)`
+  * Expands to `import quickconsole;quickconsole.%s(%s)`
 
 ## External Console
 
@@ -31,7 +61,7 @@
 
 * `listar luces` List lights in scene
 * `listar` list models in scene
-* `arbol <model_name>` show details for model 
+* `arbol <model_name>` show details for model
 * `mem` (doesn't do anything?)
 * `ver uniones` 
 * Easter Eggs:
@@ -52,3 +82,4 @@
 - `0x8b18f0`: pointer to Models Data (can be dumped using scene graph debugging console)
 - `0x8b18f4`: pointer to Scenes Data (can be dumped using scene graph debugging console)
 - `0x8b18f8`: pointer to active Models Data (can be dumped using scene graph debugging console)
+- for more see `config.yml`
